@@ -1,1 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ختمة القرآن الكريم الجماعية</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; }
+    .quran-font { font-family: 'Amiri', serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
 
+  <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="text-center sm:text-right">
+        <h1 class="text-2xl font-bold quran-font">ختمة القرآن الكريم الجماعية</h1>
+        <p class="text-xs text-emerald-200">اختر حِزبك واقرأه، وساهم في إتمام الختمة</p>
+      </div>
+      <button onclick="resetKhatma()" class="text-xs bg-emerald-900 hover:bg-emerald-950 border border-emerald-700 px-3 py-1.5 rounded-lg transition text-emerald-200">
+        بدء ختمة جديدة
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 mt-6">
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-slate-700">مستوى إنجاز الختمة</span>
+        <span id="progress-text" class="text-emerald-700 font-bold">0 / 60 حزب (0%)</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+        <div id="progress-bar" class="bg-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+
+      <div class="flex flex-wrap gap-4 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-600">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+          <span>متاح للاختيار</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+          <span>قيد القراءة</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-sky-600 inline-block"></span>
+          <span>تمت القراءة</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
+  </main>
+
+  <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h3 id="modal-title" class="text-lg font-bold text-slate-800">تفاصيل الحزب</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <div id="modal-status-box" class="p-3 rounded-xl text-sm font-medium"></div>
+
+        <div id="name-input-group">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">اسم القارئ:</label>
+          <input type="text" id="reader-name-input" placeholder="اكتب اسمك هنا..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex justify-between items-center">
+          <span class="text-xs text-emerald-800">قراءة آيات هذا الحزب مباشرة:</span>
+          <a id="read-online-link" href="#" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition font-semibold inline-block">
+            فتح المصحف ↗
+          </a>
+        </div>
+
+        <div id="modal-actions" class="flex gap-2 pt-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ahzab = [];
+    const savedData = localStorage.getItem('quran_khatma_data');
+
+    if (savedData) {
+      ahzab = JSON.parse(savedData);
+    } else {
+      for (let i = 1; i <= 60; i++) {
+        ahzab.push({ id: i, status: 'available', reader: '' });
+      }
+      saveData();
+    }
+
+    let selectedHizbId = null;
+
+    function saveData() {
+      localStorage.setItem('quran_khatma_data', JSON.stringify(ahzab));
+      renderGrid();
+      updateProgress();
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('ahzab-grid');
+      grid.innerHTML = '';
+
+      ahzab.forEach(hizb => {
+        const card = document.createElement('div');
+        let bgClass = '', borderClass = '', statusBadge = '';
+
+        if (hizb.status === 'available') {
+          bgClass = 'bg-white hover:border-emerald-400';
+          borderClass = 'border-slate-200';
+          statusBadge = '<span class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-medium">متاح</span>';
+        } else if (hizb.status === 'reading') {
+          bgClass = 'bg-amber-50/60 border-amber-300';
+          borderClass = 'border-amber-300';
+          statusBadge = `<span class="text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md truncate max-w-[90px] inline-block font-medium">${hizb.reader}</span>`;
+        } else {
+          bgClass = 'bg-sky-50/70 border-sky-300';
+          borderClass = 'border-sky-300';
+          statusBadge = `<span class="text-[11px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-md truncate max-w-[90px] inline-block font-medium">تم ✓ (${hizb.reader})</span>`;
+        }
+
+        card.className = `${bgClass} border ${borderClass} rounded-2xl p-3 flex flex-col justify-between items-center text-center cursor-pointer transition shadow-sm hover:shadow active:scale-95 min-h-[90px]`;
+        card.onclick = () => openHizbModal(hizb.id);
+
+        card.innerHTML = `
+          <div class="font-bold text-slate-800 text-base">الحزب ${hizb.id}</div>
+          <div class="w-full mt-2 flex justify-center">${statusBadge}</div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function updateProgress() {
+      const completedCount = ahzab.filter(h => h.status === 'completed').length;
+      const percent = Math.round((completedCount / 60) * 100);
+      document.getElementById('progress-bar').style.width = `${percent}%`;
+      document.getElementById('progress-text').innerText = `${completedCount} / 60 حزب (${percent}%)`;
+    }
+
+    function openHizbModal(id) {
+      selectedHizbId = id;
+      const hizb = ahzab.find(h => h.id === id);
+      const modal = document.getElementById('action-modal');
+      const title = document.getElementById('modal-title');
+      const statusBox = document.getElementById('modal-status-box');
+      const nameInput = document.getElementById('reader-name-input');
+      const nameInputGroup = document.getElementById('name-input-group');
+      const actionsContainer = document.getElementById('modal-actions');
+      const readLink = document.getElementById('read-online-link');
+
+      readLink.href = `https://quran.ksu.edu.sa/index.php#aya=1_1`;
+      title.innerText = `الحزب رقم ${hizb.id}`;
+      actionsContainer.innerHTML = '';
+
+      if (hizb.status === 'available') {
+        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
+        statusBox.innerText = 'هذا الحزب غير محجوز ومتاح للقراءة.';
+        nameInputGroup.style.display = 'block';
+        nameInput.value = '';
+        actionsContainer.innerHTML = `
+          <button onclick="reserveHizb()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl transition">
+            حجز وقراءة هذا الحزب
+          </button>
+        `;
+      } else if (hizb.status === 'reading') {
+        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-amber-50 text-amber-800 border border-amber-100';
+        statusBox.innerText = `قيد القراءة حالياً بواسطة: ${hizb.reader}`;
+        nameInputGroup.style.display = 'none';
+        actionsContainer.innerHTML = `
+          <button onclick="completeHizb()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-xl transition">
+            تأكيد إتمام القراءة ✓
+          </button>
+          <button onclick="cancelHizb()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium px-4 py-2 rounded-xl transition border border-rose-200">
+            إلغاء الحجز
+          </button>
+        `;
+      } else {
+        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100';
+        statusBox.innerText = `تمت قراءة هذا الحزب بنجاح بواسطة: ${hizb.reader}. تقبل الله!`;
+        nameInputGroup.style.display = 'none';
+        actionsContainer.innerHTML = `
+          <button onclick="cancelHizb()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-xl transition">
+            إعادة فتح الحزب للقراءة
+          </button>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('action-modal').classList.add('hidden');
+      selectedHizbId = null;
+    }
+
+    function reserveHizb() {
+      const name = document.getElementById('reader-name-input').value.trim();
+      if (!name) {
+        alert('يرجى كتابة الاسم أولاً.');
+        return;
+      }
+      const hizb = ahzab.find(h => h.id === selectedHizbId);
+      hizb.status = 'reading';
+      hizb.reader = name;
+      saveData();
+      closeModal();
+    }
+
+    function completeHizb() {
+      const hizb = ahzab.find(h => h.id === selectedHizbId);
+      hizb.status = 'completed';
+      saveData();
+      closeModal();
+    }
+
+    function cancelHizb() {
+      const hizb = ahzab.find(h => h.id === selectedHizbId);
+      hizb.status = 'available';
+      hizb.reader = '';
+      saveData();
+      closeModal();
+    }
+
+    function resetKhatma() {
+      if (confirm('هل أنت متأكد من رغبتك في تصفير الختمة والبدء من جديد؟')) {
+        ahzab.forEach(h => {
+          h.status = 'available';
+          h.reader = '';
+        });
+        saveData();
+      }
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('action-modal');
+      if (event.target === modal) closeModal();
+    };
+
+    renderGrid();
+    updateProgress();
+  </script>
+</body>
+</html>
