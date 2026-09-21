@@ -56,6 +56,7 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
+  <!-- نافذة التفاعل المنبثقة -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
@@ -72,9 +73,12 @@
         </div>
 
         <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex justify-between items-center">
-          <span class="text-xs text-emerald-800">قراءة آيات هذا الحزب مباشرة:</span>
+          <div>
+            <span class="text-xs text-emerald-900 font-bold block">قراءة الحزب مباشرة:</span>
+            <span id="page-indicator" class="text-[11px] text-emerald-700"></span>
+          </div>
           <a id="read-online-link" href="#" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition font-semibold inline-block">
-            فتح المصحف ↗
+            فتح في المصحف ↗
           </a>
         </div>
 
@@ -84,6 +88,16 @@
   </div>
 
   <script>
+    // جدول صفحات بداية كل حزب من 1 حتى 60 في مصحف المدينة
+    const hizbPages = {
+      1: 1, 2: 11, 3: 22, 4: 32, 5: 42, 6: 51, 7: 62, 8: 72, 9: 82, 10: 92,
+      11: 102, 12: 111, 13: 121, 14: 132, 15: 142, 16: 151, 17: 162, 18: 173, 19: 182, 20: 192,
+      21: 201, 22: 212, 23: 222, 24: 231, 25: 242, 26: 252, 27: 262, 28: 272, 29: 282, 30: 292,
+      31: 302, 32: 312, 33: 322, 34: 332, 35: 342, 36: 352, 37: 362, 38: 371, 39: 382, 40: 392,
+      41: 402, 42: 413, 43: 422, 44: 431, 45: 442, 46: 451, 47: 462, 48: 472, 49: 482, 50: 491,
+      51: 502, 52: 513, 53: 523, 54: 531, 55: 542, 56: 553, 57: 562, 58: 572, 59: 582, 60: 591
+    };
+
     let ahzab = [];
     const savedData = localStorage.getItem('quran_khatma_data');
 
@@ -131,6 +145,7 @@
 
         card.innerHTML = `
           <div class="font-bold text-slate-800 text-base">الحزب ${hizb.id}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">صفحة ${hizbPages[hizb.id]}</div>
           <div class="w-full mt-2 flex justify-center">${statusBadge}</div>
         `;
 
@@ -155,8 +170,13 @@
       const nameInputGroup = document.getElementById('name-input-group');
       const actionsContainer = document.getElementById('modal-actions');
       const readLink = document.getElementById('read-online-link');
+      const pageIndicator = document.getElementById('page-indicator');
 
-      readLink.href = `https://quran.ksu.edu.sa/index.php#aya=1_1`;
+      const startPage = hizbPages[hizb.id] || 1;
+      // الرابط كيدي دابا مباشرة لرقم الصفحة ديال الحزب
+      readLink.href = `https://quran.com/page/${startPage}`;
+      pageIndicator.innerText = `يبدأ من الصفحة رقم ${startPage}`;
+
       title.innerText = `الحزب رقم ${hizb.id}`;
       actionsContainer.innerHTML = '';
 
