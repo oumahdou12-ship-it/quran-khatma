@@ -19,7 +19,6 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
-    /* سكرولبار مخصص للدردشة */
     #chat-messages::-webkit-scrollbar { width: 4px; }
     #chat-messages::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
   </style>
@@ -105,7 +104,7 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
-  <!-- نافذة التفاعل المنبثقة للأحزاب -->
+  <!-- نافذة التفاعل المنبثقة -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
@@ -138,7 +137,6 @@
 
   <!-- زر ونافذة الدردشة بين الأعضاء -->
   <div class="fixed bottom-4 left-4 z-40">
-    <!-- زر فتح الدردشة الدائري -->
     <button onclick="toggleChat()" class="bg-emerald-800 hover:bg-emerald-900 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 border-2 border-amber-400/80 transition transform active:scale-95">
       <span class="text-xl">💬</span>
       <span class="text-xs font-bold pl-1 hidden sm:inline">دردشة الختمة</span>
@@ -146,9 +144,7 @@
     </button>
   </div>
 
-  <!-- صندوق الدردشة المنبثق -->
   <div id="chat-box" class="fixed bottom-20 left-4 w-[calc(100vw-2rem)] sm:w-80 sm:max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 z-40 hidden flex flex-col overflow-hidden h-[420px]">
-    <!-- رأس نافذة الدردشة -->
     <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center border-b border-emerald-700">
       <div class="flex items-center gap-2">
         <span class="text-lg">💬</span>
@@ -160,12 +156,10 @@
       <button onclick="toggleChat()" class="text-emerald-200 hover:text-white text-xl leading-none">&times;</button>
     </div>
 
-    <!-- رسائل الدردشة -->
     <div id="chat-messages" class="flex-1 p-3 overflow-y-auto space-y-2.5 bg-slate-50 text-xs">
       <div class="text-center text-slate-400 text-[11px] py-4">مرحباً بكم في دردشة الختمة المباركة 🌿</div>
     </div>
 
-    <!-- حقول إرسال الرسائل -->
     <form onsubmit="sendMessage(event)" class="p-2.5 bg-white border-t border-slate-100 flex flex-col gap-1.5">
       <input type="text" id="chat-sender" placeholder="اسمك الكريم..." class="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-600">
       <div class="flex gap-1.5">
@@ -178,7 +172,6 @@
   </div>
 
   <script>
-    // إعدادات Firebase
     const firebaseConfig = {
       databaseURL: "https://quran-khatma-3b53e-default-rtdb.firebaseio.com/"
     };
@@ -187,7 +180,6 @@
     const khatmaRef = db.ref('khatma_ahzab');
     const chatRef = db.ref('khatma_chat');
 
-    // جدول صفحات الأحزاب
     const hizbPages = {
       1: 1, 2: 11, 3: 22, 4: 32, 5: 42, 6: 51, 7: 62, 8: 72, 9: 82, 10: 92,
       11: 102, 12: 111, 13: 121, 14: 132, 15: 142, 16: 151, 17: 162, 18: 173, 19: 182, 20: 192,
@@ -200,7 +192,6 @@
     let ahzab = [];
     let selectedHizbId = null;
 
-    // مزامنة الأحزاب الحية
     khatmaRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -216,7 +207,6 @@
       updateProgress();
     });
 
-    // مزامنة رسائل الدردشة الحية
     chatRef.limitToLast(40).on('value', (snapshot) => {
       const messagesContainer = document.getElementById('chat-messages');
       messagesContainer.innerHTML = '';
@@ -276,7 +266,6 @@
       textInput.value = '';
     }
 
-    // PWA Install Prompt
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -359,7 +348,9 @@
       const pageIndicator = document.getElementById('page-indicator');
 
       const startPage = hizbPages[hizb.id] || 1;
-      readLink.href = `https://quran.com/page/${startPage}`;
+      
+      // Lien d-mousshaf fih ghir l-3arbiya bla tarjama anglais
+      readLink.href = `https://surah.app/page/${startPage}`;
       pageIndicator.innerText = `يبدأ من الصفحة رقم ${startPage}`;
 
       title.innerText = `الحزب رقم ${hizb.id}`;
