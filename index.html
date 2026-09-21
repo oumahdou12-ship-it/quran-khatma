@@ -2,12 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ختمة القرآن الكريم الجماعية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ختمة القرآن الكريم والتواصل</title>
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=5">
+  <link rel="manifest" href="manifest.json?v=7">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,42 +19,47 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
-    #chat-messages::-webkit-scrollbar { width: 4px; }
-    #chat-messages::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    #chat-container::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    .chat-bg {
+      background-color: #efeae2;
+      background-image: radial-gradient(#d1d7db 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
   </style>
 
-  <!-- مكتبات Firebase -->
+  <!-- مكتبات Firebase الأساسية فقط (مجانية بالكامل) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen pb-24">
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
 
   <!-- شريط العنوان -->
-  <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-10 border-b border-emerald-800">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+  <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-20 border-b border-emerald-800">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl overflow-hidden shadow-inner border border-amber-400/40 flex items-center justify-center shrink-0 bg-emerald-950">
+        <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-inner border border-amber-400/40 flex items-center justify-center shrink-0 bg-emerald-950">
           <img src="icon.svg" alt="شعار القرآن الكريم" class="w-full h-full object-cover">
         </div>
-        <div class="text-center sm:text-right">
-          <h1 class="text-2xl font-bold quran-font text-amber-300 tracking-wide">ختمة القرآن الكريم الجماعية</h1>
-          <p class="text-xs text-emerald-200">اختر حِزبك واقرأه مباشرة، وساهم في إتمام الختمة</p>
+        <div>
+          <h1 class="text-xl font-bold quran-font text-amber-300">ختمة القرآن الكريم الجماعية</h1>
+          <p id="sub-header-title" class="text-[11px] text-emerald-200">اختر حِزبك وساهم في إتمام الختمة المباركة</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
-        <button id="header-install-btn" onclick="installApp()" class="hidden text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1.5">
-          <span>📲</span> <span>تثبيت التطبيق</span>
+        <button id="header-install-btn" onclick="installApp()" class="hidden text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded-xl transition shadow flex items-center gap-1">
+          <span>📲</span> <span>تثبيت</span>
         </button>
-        <button onclick="resetKhatma()" class="text-xs bg-emerald-950 hover:bg-black border border-emerald-700 px-3 py-2 rounded-xl transition text-emerald-200">
-          بدء ختمة جديدة
+        <button onclick="resetKhatma()" id="reset-btn" class="text-xs bg-emerald-950 hover:bg-black border border-emerald-700 px-3 py-1.5 rounded-xl transition text-emerald-200">
+          ختمة جديدة
         </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-4xl mx-auto px-4 mt-4">
-
+  <!-- الصفحة الأولى: شبكة الختمة والأحزاب -->
+  <main id="khatma-view" class="max-w-4xl mx-auto px-4 mt-4 w-full flex-1">
     <!-- لافتة التثبيت للهاتف -->
     <div id="install-banner" class="hidden mb-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-4 rounded-2xl shadow-lg border border-emerald-700/50 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -63,7 +68,7 @@
         </div>
         <div>
           <h4 class="font-bold text-sm text-amber-300">تثبيت التطبيق على هاتفك</h4>
-          <p class="text-xs text-emerald-100">لتصل لأحزاب الختمة بضغطة زر واحدة في أي وقت</p>
+          <p class="text-xs text-emerald-100">لتصل للأحزاب والمحادثة بسهولة في أي وقت</p>
         </div>
       </div>
       <button onclick="installApp()" class="bg-amber-400 text-slate-900 font-bold text-xs px-4 py-2.5 rounded-xl shadow hover:bg-amber-300 transition shrink-0">
@@ -104,7 +109,64 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
-  <!-- نافذة التفاعل المنبثقة -->
+  <!-- الصفحة الثانية: محادثة WhatsApp الجماعية المتكاملة مع الأوديو المباشر -->
+  <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-140px)]">
+    <!-- قائمة الرسائل -->
+    <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-3 chat-bg flex flex-col">
+      <div class="text-center my-2">
+        <span class="bg-emerald-100 text-emerald-800 text-[11px] px-3 py-1 rounded-full shadow-sm">
+          🌿 مرحباً بكم في محادثة الختمة الصوتية والكتابية
+        </span>
+      </div>
+    </div>
+
+    <!-- مؤشر جاري تسجيل الصوت -->
+    <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-4 py-2 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
+        <span>جاري تسجيل رسالة صوتية... اضغط على الميكروفون مجدداً للإرسال</span>
+      </div>
+      <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-sm">إلغاء ✕</button>
+    </div>
+
+    <!-- شريط إرسال الرسائل والصوتيات -->
+    <div class="bg-slate-100 border-t border-slate-200 p-2.5 flex flex-col gap-2">
+      <div class="flex items-center gap-2">
+        <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="w-1/3 max-w-[130px] border border-slate-300 rounded-xl px-2.5 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white">
+        <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
+        
+        <!-- زر إرسال النص -->
+        <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+
+        <!-- زر تسجيل الأوديو -->
+        <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+          <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- شريط التنقل السفلي الثابت (Bottom Bar) -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex justify-around items-center py-2 shadow-lg">
+    <button onclick="switchTab('khatma')" id="tab-khatma-btn" class="flex flex-col items-center gap-1 text-emerald-800 font-bold transition">
+      <span class="text-xl">📖</span>
+      <span class="text-[11px]">أحزاب الختمة</span>
+    </button>
+    <button onclick="switchTab('chat')" id="tab-chat-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition relative">
+      <span class="text-xl">💬</span>
+      <span class="text-[11px]">المحادثة والصوتيات</span>
+      <span id="unread-dot" class="w-2 h-2 rounded-full bg-amber-500 absolute top-0 right-3 hidden"></span>
+    </button>
+  </nav>
+
+  <!-- نافذة تفاصيل الحزب المنبثقة -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
@@ -135,54 +197,58 @@
     </div>
   </div>
 
-  <!-- زر ونافذة الدردشة بين الأعضاء -->
-  <div class="fixed bottom-4 left-4 z-40">
-    <button onclick="toggleChat()" class="bg-emerald-800 hover:bg-emerald-900 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 border-2 border-amber-400/80 transition transform active:scale-95">
-      <span class="text-xl">💬</span>
-      <span class="text-xs font-bold pl-1 hidden sm:inline">دردشة الختمة</span>
-      <span id="chat-badge" class="w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping hidden"></span>
-    </button>
-  </div>
-
-  <div id="chat-box" class="fixed bottom-20 left-4 w-[calc(100vw-2rem)] sm:w-80 sm:max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 z-40 hidden flex flex-col overflow-hidden h-[420px]">
-    <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center border-b border-emerald-700">
-      <div class="flex items-center gap-2">
-        <span class="text-lg">💬</span>
-        <div>
-          <h4 class="font-bold text-xs text-amber-300">دردشة المشاركين</h4>
-          <p class="text-[10px] text-emerald-200">تبادل الأدعية والتبريكات</p>
-        </div>
-      </div>
-      <button onclick="toggleChat()" class="text-emerald-200 hover:text-white text-xl leading-none">&times;</button>
-    </div>
-
-    <div id="chat-messages" class="flex-1 p-3 overflow-y-auto space-y-2.5 bg-slate-50 text-xs">
-      <div class="text-center text-slate-400 text-[11px] py-4">مرحباً بكم في دردشة الختمة المباركة 🌿</div>
-    </div>
-
-    <form onsubmit="sendMessage(event)" class="p-2.5 bg-white border-t border-slate-100 flex flex-col gap-1.5">
-      <input type="text" id="chat-sender" placeholder="اسمك الكريم..." class="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-600">
-      <div class="flex gap-1.5">
-        <input type="text" id="chat-input" placeholder="اكتب رسالة أو دعاء..." class="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-600">
-        <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
-          إرسال
-        </button>
-      </div>
-    </form>
-  </div>
-
   <script>
+    // 1. إعدادات Firebase
     const firebaseConfig = {
       databaseURL: "https://quran-khatma-3b53e-default-rtdb.firebaseio.com/"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const khatmaRef = db.ref('khatma_ahzab');
-    const chatRef = db.ref('khatma_chat');
+    const messagesRef = db.ref('khatma_messages');
 
+    let currentTab = 'khatma';
     let ahzab = [];
     let selectedHizbId = null;
 
+    // حفظ واسترجاع اسم المستخدم تلقائياً
+    const nameInput = document.getElementById('user-display-name');
+    nameInput.value = localStorage.getItem('chat_username') || '';
+    nameInput.addEventListener('input', (e) => {
+      localStorage.setItem('chat_username', e.target.value.trim());
+    });
+
+    // التبديل بين الختمة والمحادثة
+    function switchTab(tab) {
+      currentTab = tab;
+      const khatmaView = document.getElementById('khatma-view');
+      const chatView = document.getElementById('chat-view');
+      const tabKhatmaBtn = document.getElementById('tab-khatma-btn');
+      const tabChatBtn = document.getElementById('tab-chat-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const subTitle = document.getElementById('sub-header-title');
+
+      if (tab === 'khatma') {
+        khatmaView.classList.remove('hidden');
+        chatView.classList.add('hidden');
+        tabKhatmaBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition';
+        tabChatBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition relative';
+        resetBtn.classList.remove('hidden');
+        subTitle.innerText = 'اختر حِزبك وساهم في إتمام الختمة المباركة';
+      } else {
+        khatmaView.classList.add('hidden');
+        chatView.classList.remove('hidden');
+        tabKhatmaBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition';
+        tabChatBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition relative';
+        resetBtn.classList.add('hidden');
+        subTitle.innerText = 'دردشة المشاركين وتسجيلات الصوت المباشرة';
+        document.getElementById('unread-dot').classList.add('hidden');
+        const container = document.getElementById('chat-container');
+        setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+      }
+    }
+
+    // 2. مزامنة الأحزاب
     khatmaRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -197,90 +263,6 @@
       renderGrid();
       updateProgress();
     });
-
-    chatRef.limitToLast(40).on('value', (snapshot) => {
-      const messagesContainer = document.getElementById('chat-messages');
-      messagesContainer.innerHTML = '';
-      const data = snapshot.val();
-      if (data) {
-        Object.values(data).forEach(msg => {
-          const div = document.createElement('div');
-          div.className = 'bg-white p-2 rounded-xl border border-slate-200 shadow-sm';
-          div.innerHTML = `
-            <div class="flex justify-between items-center mb-1">
-              <span class="font-bold text-emerald-800">${msg.sender}</span>
-              <span class="text-[10px] text-slate-400">${msg.time}</span>
-            </div>
-            <div class="text-slate-700 text-xs break-words">${msg.text}</div>
-          `;
-          messagesContainer.appendChild(div);
-        });
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      } else {
-        messagesContainer.innerHTML = '<div class="text-center text-slate-400 text-[11px] py-4">كن أول من يكتب دعاء أو رسالة للمجموعة 🌿</div>';
-      }
-    });
-
-    function toggleChat() {
-      const chatBox = document.getElementById('chat-box');
-      chatBox.classList.toggle('hidden');
-      if (!chatBox.classList.contains('hidden')) {
-        const messagesContainer = document.getElementById('chat-messages');
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }
-
-    function sendMessage(e) {
-      e.preventDefault();
-      const senderInput = document.getElementById('chat-sender');
-      const textInput = document.getElementById('chat-input');
-      const sender = senderInput.value.trim();
-      const text = textInput.value.trim();
-
-      if (!sender) {
-        alert('يرجى إدخال اسمك أولاً');
-        senderInput.focus();
-        return;
-      }
-      if (!text) return;
-
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
-
-      chatRef.push({
-        sender: sender,
-        text: text,
-        time: timeStr,
-        timestamp: Date.now()
-      });
-
-      textInput.value = '';
-    }
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const banner = document.getElementById('install-banner');
-      const headerBtn = document.getElementById('header-install-btn');
-      if (banner) banner.classList.remove('hidden');
-      if (headerBtn) headerBtn.classList.remove('hidden');
-    });
-
-    function installApp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            document.getElementById('install-banner').classList.add('hidden');
-            document.getElementById('header-install-btn').classList.add('hidden');
-          }
-          deferredPrompt = null;
-        });
-      } else {
-        alert('لتثبيت التطبيق: اضغط على خيارات المتصفح (3 نقاط) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".');
-      }
-    }
 
     function renderGrid() {
       const grid = document.getElementById('ahzab-grid');
@@ -335,16 +317,14 @@
       const modal = document.getElementById('action-modal');
       const title = document.getElementById('modal-title');
       const statusBox = document.getElementById('modal-status-box');
-      const nameInput = document.getElementById('reader-name-input');
+      const nameInp = document.getElementById('reader-name-input');
       const nameInputGroup = document.getElementById('name-input-group');
       const actionsContainer = document.getElementById('modal-actions');
       const readLink = document.getElementById('read-online-link');
       const hizbIndicator = document.getElementById('hizb-indicator');
 
-      // رابط مباشر ودقيق لنفس الحزب المختار بالعربية وبدون تفسير
       readLink.href = `https://quran.com/ar/hizb/${hizb.id}`;
       hizbIndicator.innerText = `قراءة آيات الحزب ${hizb.id} كاملة بالرسم العثماني`;
-
       title.innerText = `الحزب رقم ${hizb.id}`;
       actionsContainer.innerHTML = '';
 
@@ -352,7 +332,7 @@
         statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
         statusBox.innerText = 'هذا الحزب غير محجوز ومتاح للقراءة.';
         nameInputGroup.style.display = 'block';
-        nameInput.value = '';
+        nameInp.value = localStorage.getItem('chat_username') || '';
         actionsContainer.innerHTML = `
           <button onclick="reserveHizb()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2.5 rounded-xl transition shadow">
             حجز وقراءة هذا الحزب
@@ -380,7 +360,6 @@
           </button>
         `;
       }
-
       modal.classList.remove('hidden');
     }
 
@@ -391,16 +370,12 @@
 
     function reserveHizb() {
       const name = document.getElementById('reader-name-input').value.trim();
-      if (!name) {
-        alert('يرجى كتابة الاسم أولاً.');
-        return;
-      }
+      if (!name) { alert('يرجى كتابة الاسم أولاً.'); return; }
+      localStorage.setItem('chat_username', name);
+      nameInput.value = name;
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
-        db.ref(`khatma_ahzab/${index}`).update({
-          status: 'reading',
-          reader: name
-        });
+        db.ref(`khatma_ahzab/${index}`).update({ status: 'reading', reader: name });
       }
       closeModal();
     }
@@ -408,9 +383,7 @@
     function completeHizb() {
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
-        db.ref(`khatma_ahzab/${index}`).update({
-          status: 'completed'
-        });
+        db.ref(`khatma_ahzab/${index}`).update({ status: 'completed' });
       }
       closeModal();
     }
@@ -418,10 +391,7 @@
     function cancelHizb() {
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
-        db.ref(`khatma_ahzab/${index}`).update({
-          status: 'available',
-          reader: ''
-        });
+        db.ref(`khatma_ahzab/${index}`).update({ status: 'available', reader: '' });
       }
       closeModal();
     }
@@ -433,6 +403,170 @@
           resetData.push({ id: i, status: 'available', reader: '' });
         }
         khatmaRef.set(resetData);
+      }
+    }
+
+    // 3. المحادثة والصوتيات المباشرة
+    messagesRef.limitToLast(40).on('value', (snapshot) => {
+      const container = document.getElementById('chat-container');
+      container.innerHTML = '';
+      const data = snapshot.val();
+      const myName = localStorage.getItem('chat_username') || '';
+
+      if (data) {
+        Object.values(data).forEach(msg => {
+          const isMe = myName && msg.sender === myName;
+          const bubble = document.createElement('div');
+          bubble.className = `max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 shadow-sm flex flex-col ${
+            isMe ? 'self-end bg-[#d9fdd3] text-slate-800 rounded-br-none' : 'self-start bg-white text-slate-800 rounded-bl-none border border-slate-100'
+          }`;
+
+          let contentHtml = '';
+          if (msg.type === 'audio') {
+            contentHtml = `
+              <div class="flex items-center gap-2 pt-1 pb-1">
+                <span class="text-lg">🎙️</span>
+                <audio controls src="${msg.audioData}" class="w-48 sm:w-56 h-8"></audio>
+              </div>
+            `;
+          } else {
+            contentHtml = `<p class="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">${msg.text}</p>`;
+          }
+
+          bubble.innerHTML = `
+            <div class="flex items-center justify-between gap-4 mb-1">
+              <span class="font-bold text-[11px] ${isMe ? 'text-emerald-800' : 'text-amber-700'}">${msg.sender}</span>
+              <span class="text-[9px] text-slate-400">${msg.time}</span>
+            </div>
+            ${contentHtml}
+          `;
+          container.appendChild(bubble);
+        });
+        container.scrollTop = container.scrollHeight;
+        if (currentTab !== 'chat') {
+          document.getElementById('unread-dot').classList.remove('hidden');
+        }
+      }
+    });
+
+    function sendTextMessage() {
+      const sender = nameInput.value.trim();
+      const textInp = document.getElementById('message-text');
+      const text = textInp.value.trim();
+
+      if (!sender) {
+        alert('يرجى إدخال اسمك أولاً');
+        nameInput.focus();
+        return;
+      }
+      if (!text) return;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+
+      messagesRef.push({
+        sender: sender,
+        text: text,
+        type: 'text',
+        time: timeStr,
+        timestamp: Date.now()
+      });
+
+      textInp.value = '';
+    }
+
+    // 4. مسجل الصوت المباشر (Base64 Audio Recorder)
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleAudioRecording() {
+      const sender = nameInput.value.trim();
+      if (!sender) {
+        alert('يرجى إدخال اسمك أولاً قبل التسجيل الصوتي');
+        nameInput.focus();
+        return;
+      }
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            if (audioChunks.length > 0) {
+              const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = () => {
+                const base64Audio = reader.result;
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+
+                messagesRef.push({
+                  sender: sender,
+                  audioData: base64Audio,
+                  type: 'audio',
+                  time: timeStr,
+                  timestamp: Date.now()
+                });
+              };
+            }
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          document.getElementById('recording-status').classList.remove('hidden');
+          document.getElementById('mic-btn').className = 'bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-xl transition shadow animate-bounce flex items-center justify-center shrink-0';
+        } catch (err) {
+          alert('يرجى السماح بالوصول إلى الميكروفون لتسجيل الرسالة الصوتية.');
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('recording-status').classList.add('hidden');
+        document.getElementById('mic-btn').className = 'bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0';
+      }
+    }
+
+    function cancelRecording() {
+      if (mediaRecorder && isRecording) {
+        audioChunks = [];
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('recording-status').classList.add('hidden');
+        document.getElementById('mic-btn').className = 'bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0';
+      }
+    }
+
+    // PWA Install
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('install-banner');
+      const headerBtn = document.getElementById('header-install-btn');
+      if (banner) banner.classList.remove('hidden');
+      if (headerBtn) headerBtn.classList.remove('hidden');
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('install-banner').classList.add('hidden');
+            document.getElementById('header-install-btn').classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert('لتثبيت التطبيق: اضغط على خيارات المتصفح (3 نقاط) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".');
       }
     }
 
