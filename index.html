@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ختمة القرآن الكريم الجماعية</title><link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#065f46">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ختمة القرآن الكريم الجماعية</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#065f46">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,19 +20,42 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
 
+  <!-- شريط العنوان -->
   <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-10">
     <div class="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
       <div class="text-center sm:text-right">
         <h1 class="text-2xl font-bold quran-font">ختمة القرآن الكريم الجماعية</h1>
         <p class="text-xs text-emerald-200">اختر حِزبك واقرأه، وساهم في إتمام الختمة</p>
       </div>
-      <button onclick="resetKhatma()" class="text-xs bg-emerald-900 hover:bg-emerald-950 border border-emerald-700 px-3 py-1.5 rounded-lg transition text-emerald-200">
-        بدء ختمة جديدة
-      </button>
+      <div class="flex items-center gap-2">
+        <!-- زر التثبيت داخل الهيدر -->
+        <button id="header-install-btn" onclick="installApp()" class="hidden text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-3 py-1.5 rounded-lg transition shadow">
+          📲 تثبيت كـ تطبيق
+        </button>
+        <button onclick="resetKhatma()" class="text-xs bg-emerald-900 hover:bg-emerald-950 border border-emerald-700 px-3 py-1.5 rounded-lg transition text-emerald-200">
+          بدء ختمة جديدة
+        </button>
+      </div>
     </div>
   </header>
 
-  <main class="max-w-4xl mx-auto px-4 mt-6">
+  <main class="max-w-4xl mx-auto px-4 mt-4">
+
+    <!-- لافتة التثبيت الواضحة فالبداية (كتطلع لأي واحد دخل من التيليفون) -->
+    <div id="install-banner" class="hidden mb-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-md flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl">📱</div>
+        <div>
+          <h4 class="font-bold text-sm">تبغيو تنزلو التطبيق على التيليفون؟</h4>
+          <p class="text-xs text-emerald-100">باش يولي يفتح معاكم ديما بضغطة وحدة بلا متصفح</p>
+        </div>
+      </div>
+      <button onclick="installApp()" class="bg-white text-emerald-800 font-bold text-xs px-4 py-2.5 rounded-xl shadow hover:bg-emerald-50 transition shrink-0">
+        تثبيت دابا 📲
+      </button>
+    </div>
+
+    <!-- كارت نسبة تقدم الختمة -->
     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
       <div class="flex justify-between items-center mb-2">
         <span class="font-bold text-slate-700">مستوى إنجاز الختمة</span>
@@ -40,6 +65,7 @@
         <div id="progress-bar" class="bg-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
       </div>
 
+      <!-- دليل الألوان -->
       <div class="flex flex-wrap gap-4 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-600">
         <div class="flex items-center gap-1.5">
           <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
@@ -56,6 +82,7 @@
       </div>
     </div>
 
+    <!-- شبكة الـ 60 حزب -->
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
@@ -91,7 +118,7 @@
   </div>
 
   <script>
-    // جدول صفحات بداية كل حزب من 1 حتى 60 في مصحف المدينة
+    // جدول صفحات الأحزاب
     const hizbPages = {
       1: 1, 2: 11, 3: 22, 4: 32, 5: 42, 6: 51, 7: 62, 8: 72, 9: 82, 10: 92,
       11: 102, 12: 111, 13: 121, 14: 132, 15: 142, 16: 151, 17: 162, 18: 173, 19: 182, 20: 192,
@@ -100,6 +127,30 @@
       41: 402, 42: 413, 43: 422, 44: 431, 45: 442, 46: 451, 47: 462, 48: 472, 49: 482, 50: 491,
       51: 502, 52: 513, 53: 523, 54: 531, 55: 542, 56: 553, 57: 562, 58: 572, 59: 582, 60: 591
     };
+
+    // إدارة التثبيت (PWA Install Prompt)
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').classList.remove('hidden');
+      document.getElementById('header-install-btn').classList.remove('hidden');
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('install-banner').classList.add('hidden');
+            document.getElementById('header-install-btn').classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert('لتثبيت التطبيق في هاتفك: اضغط على خيارات المتصفح (3 نقاط) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".');
+      }
+    }
 
     let ahzab = [];
     const savedData = localStorage.getItem('quran_khatma_data');
@@ -176,7 +227,6 @@
       const pageIndicator = document.getElementById('page-indicator');
 
       const startPage = hizbPages[hizb.id] || 1;
-      // الرابط كيدي دابا مباشرة لرقم الصفحة ديال الحزب
       readLink.href = `https://quran.com/page/${startPage}`;
       pageIndicator.innerText = `يبدأ من الصفحة رقم ${startPage}`;
 
