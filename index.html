@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=12">
+  <link rel="manifest" href="manifest.json?v=13">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -121,15 +121,15 @@
           <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-600 focus:outline-none w-32">
         </div>
 
-        <!-- زر مسح المحادثة وعنوان الغرفة الحالية -->
+        <!-- زر مسح المحادثة محلياً فقط وعنوان الغرفة -->
         <div class="flex items-center gap-1.5">
           <div id="active-chat-title" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
             <span>👥</span> <span id="chat-target-name">المجموعة العامة</span>
           </div>
 
-          <!-- زر مسح المحادثة 🗑️ -->
-          <button onclick="clearCurrentChat()" class="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مسح كل رسائل هذه المحادثة">
-            <span>🗑️</span> <span class="hidden sm:inline">مسح المحادثة</span>
+          <!-- زر المسح الخاص بهاتفي فقط -->
+          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-2 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1 shadow-sm" title="مسح المحادثة من هاتفي فقط">
+            <span>🗑️</span> <span class="hidden sm:inline">مسح عندي</span>
           </button>
         </div>
       </div>
@@ -379,10 +379,14 @@
         messagesListener.off();
       }
       const path = getChatRoomPath();
-      messagesListener = db.ref(path).limitToLast(40);
+      messagesListener = db.ref(path).limitToLast(60);
 
       const container = document.getElementById('chat-container');
       container.innerHTML = '<div class="text-center text-slate-400 text-xs py-4">جاري تحميل الرسائل...</div>';
+
+      // مفتاح توقيت المسح المحلي الخاص بهذا المستخدم وهذه المحادثة
+      const clearKey = `chat_cleared_at_${myUsername}_${path.replace(/\//g, '_')}`;
+      const clearedBefore = parseInt(localStorage.getItem(clearKey) || '0', 10);
 
       messagesListener.on('value', (snapshot) => {
         container.innerHTML = '';
@@ -397,7 +401,10 @@
 
         if (data) {
           const msgsArray = Object.values(data);
-          msgsArray.forEach(msg => {
+          // فلترة: لا نظهر إلا الرسائل التي أُرسلت بعد آخر مسح محلي لهذا الهاتف
+          const visibleMsgs = msgsArray.filter(m => (m.timestamp || 0) > clearedBefore);
+
+          visibleMsgs.forEach(msg => {
             const isMe = myUsername && msg.sender === myUsername;
             const bubble = document.createElement('div');
             bubble.className = `max-w-[85%] sm:max-w-[70%] rounded-2xl p-2.5 shadow-sm flex flex-col ${
@@ -432,8 +439,8 @@
             container.appendChild(bubble);
           });
 
-          if (!isInitialLoad && msgsArray.length > 0) {
-            const lastMsg = msgsArray[msgsArray.length - 1];
+          if (!isInitialLoad && visibleMsgs.length > 0) {
+            const lastMsg = visibleMsgs[visibleMsgs.length - 1];
             if (lastMsg.sender !== myUsername) {
               let bodyText = lastMsg.text || (lastMsg.type === 'audio' ? '🎙️ رسالة صوتية جديدة' : '📷 صورة جديدة');
               showSystemNotification(`رسالة من ${lastMsg.sender}`, bodyText);
@@ -451,16 +458,16 @@
       });
     }
 
-    // دالة مسح المحادثة بالكامل (Vider la discussion)
-    function clearCurrentChat() {
+    // دالة المسح من هاتفي فقط (Supprimer pour moi)
+    function clearChatForMeOnly() {
       const roomName = currentChatTarget === 'group' ? 'المجموعة العامة' : `محادثتك مع ${currentChatTarget}`;
-      if (confirm(`هل أنت متأكد من مسح جميع رسائل "${roomName}"؟ لن يمكنك استرجاعها.`)) {
+      if (confirm(`هل تريد مسح رسائل "${roomName}" من هاتفك فقط؟ ستبقى الرسائل محفوظة لدى باقي المشاركين.`)) {
         const path = getChatRoomPath();
-        db.ref(path).remove().then(() => {
-          alert('تم مسح المحادثة بنجاح 🗑️');
-        }).catch((err) => {
-          alert('تعذر مسح المحادثة: ' + err.message);
-        });
+        const clearKey = `chat_cleared_at_${myUsername}_${path.replace(/\//g, '_')}`;
+        // تسجيل اللحظة الحالية في ذاكرة هذا الهاتف فقط
+        localStorage.setItem(clearKey, Date.now().toString());
+        // إعادة تحميل العرض لإخفائها فوراً
+        loadChatMessages();
       }
     }
 
