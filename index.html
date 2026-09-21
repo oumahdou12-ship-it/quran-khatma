@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=14">
+  <link rel="manifest" href="manifest.json?v=15">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,7 +31,7 @@
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <!-- مكتبة الاتصال الصوتي والمرئي المجانية -->
+  <!-- مكتبة الاتصال الصوتي والمرئي -->
   <script src="https://meet.jit.si/external_api.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
@@ -191,7 +191,34 @@
     </div>
   </main>
 
-  <!-- شاشة المكالمة المباشرة (Audio / Vidéo Call Modal) -->
+  <!-- شاشة الرنين عند استقبال مكالمة (Incoming Call Ringing Screen) -->
+  <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
+    <div class="w-24 h-24 rounded-full bg-emerald-600/30 border-4 border-emerald-500 flex items-center justify-center animate-pulse mb-6">
+      <span class="text-4xl animate-bounce">📞</span>
+    </div>
+    <h2 class="text-xl font-bold text-white mb-2" id="caller-name-display">فلان يتصل بك...</h2>
+    <p class="text-emerald-300 text-xs mb-10" id="call-type-display">مكالمة واردة مباشرة (صوتية)</p>
+
+    <div class="flex items-center gap-12 w-full max-w-xs justify-around">
+      <!-- زر الرفض -->
+      <button onclick="declineIncomingCall()" class="flex flex-col items-center gap-2 group">
+        <div class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-2xl shadow-xl transition transform group-active:scale-90">
+          ✕
+        </div>
+        <span class="text-xs text-rose-300 font-bold">رفض</span>
+      </button>
+
+      <!-- زر القبول -->
+      <button onclick="acceptIncomingCall()" class="flex flex-col items-center gap-2 group">
+        <div class="w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-2xl shadow-xl transition transform group-active:scale-90 animate-bounce">
+          📞
+        </div>
+        <span class="text-xs text-emerald-300 font-bold">قبول</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- شاشة المكالمة المباشرة الجارية (Jitsi Call Interface) -->
   <div id="call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col hidden">
     <div class="bg-slate-900 px-4 py-3 flex justify-between items-center text-white border-b border-slate-800">
       <div class="flex items-center gap-2">
@@ -205,7 +232,6 @@
         <span>إنهاء المكالمة ✕</span>
       </button>
     </div>
-    <!-- حاوية واجهة الاتصال -->
     <div id="jitsi-container" class="flex-1 w-full h-full bg-slate-950"></div>
   </div>
 
@@ -273,6 +299,7 @@
     const db = firebase.database();
     const khatmaRef = db.ref('khatma_ahzab');
     const usersRef = db.ref('khatma_users');
+    const callsRef = db.ref('khatma_active_calls');
 
     let currentTab = 'khatma';
     let currentChatTarget = 'group';
@@ -283,12 +310,15 @@
     let messagesListener = null;
     let isInitialLoad = true;
     let jitsiApi = null;
+    let ringtoneInterval = null;
+    let currentIncomingCallData = null;
 
     const nameInput = document.getElementById('user-display-name');
     let myUsername = localStorage.getItem('chat_username') || '';
     if (myUsername) {
       nameInput.value = myUsername;
       registerUser(myUsername);
+      listenForIncomingCalls(myUsername);
     }
 
     nameInput.addEventListener('change', (e) => {
@@ -297,6 +327,7 @@
         myUsername = val;
         localStorage.setItem('chat_username', myUsername);
         registerUser(myUsername);
+        listenForIncomingCalls(myUsername);
         loadChatMessages();
       }
     });
@@ -310,7 +341,106 @@
       });
     }
 
-    // نظام الاتصال الصوتي والمرئي (Audio / Video Call Engine)
+    // ==========================================
+    // محرك الرنين والاهتزاز للمكالمات (Ringtone Engine)
+    // ==========================================
+    let audioCtx = null;
+    function playRingtoneSound() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime); // نغمة الرنين الكلاسيكية
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.2); // رنة لمدة 1.2 ثانية
+      } catch (e) {
+        console.log('AudioContext Ringtone error:', e);
+      }
+    }
+
+    function startRinging() {
+      stopRinging();
+      playRingtoneSound();
+      ringtoneInterval = setInterval(() => {
+        playRingtoneSound();
+      }, 2500);
+
+      // اهتزاز متواصل للهاتف
+      if ('vibrate' in navigator) {
+        navigator.vibrate([1000, 500, 1000, 500, 1000]);
+      }
+    }
+
+    function stopRinging() {
+      if (ringtoneInterval) {
+        clearInterval(ringtoneInterval);
+        ringtoneInterval = null;
+      }
+      if ('vibrate' in navigator) {
+        navigator.vibrate(0);
+      }
+    }
+
+    // الاستماع للمكالمات الواردة لهذا المستخدم
+    function listenForIncomingCalls(username) {
+      if (!username) return;
+      const myCleanKey = username.replace(/[.#$\[\]]/g, '_');
+
+      callsRef.child(myCleanKey).on('value', (snapshot) => {
+        const call = snapshot.val();
+        // إذا كان هناك اتصال جديد ولم يمضِ عليه أكثر من 45 ثانية
+        if (call && call.status === 'ringing' && (Date.now() - call.timestamp) < 45000) {
+          currentIncomingCallData = call;
+          document.getElementById('caller-name-display').innerText = `${call.caller} يتصل بك الآن... 📞`;
+          document.getElementById('call-type-display').innerText = call.isVideo ? 'مكالمة فيديو واردة' : 'مكالمة صوتية واردة';
+          document.getElementById('incoming-call-screen').classList.remove('hidden');
+          startRinging();
+
+          // إشعار نظام بالصوت إذا كان التطبيق في الخلفية
+          showSystemNotification(`مكالمة واردة من ${call.caller} 📞`, 'اضغط هنا للرد على المكالمة فوراً.');
+        } else {
+          stopRinging();
+          document.getElementById('incoming-call-screen').classList.add('hidden');
+          currentIncomingCallData = null;
+        }
+      });
+    }
+
+    function acceptIncomingCall() {
+      stopRinging();
+      document.getElementById('incoming-call-screen').classList.add('hidden');
+      if (currentIncomingCallData) {
+        const isVideo = currentIncomingCallData.isVideo;
+        const roomCode = currentIncomingCallData.roomCode;
+        
+        // مسح حالة الاتصال من السيرفر
+        const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
+        callsRef.child(myCleanKey).remove();
+
+        launchJitsiCall(roomCode, isVideo, currentIncomingCallData.caller);
+      }
+    }
+
+    function declineIncomingCall() {
+      stopRinging();
+      document.getElementById('incoming-call-screen').classList.add('hidden');
+      if (currentIncomingCallData) {
+        const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
+        callsRef.child(myCleanKey).remove();
+        currentIncomingCallData = null;
+      }
+    }
+
+    // بدء اتصال لشخص آخر أو للمجموعة
     function startCall(isVideo) {
       if (!myUsername) {
         alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل بدء المكالمة');
@@ -318,34 +448,56 @@
         return;
       }
 
-      const modal = document.getElementById('call-modal');
-      const title = document.getElementById('call-modal-title');
-      const icon = document.getElementById('call-icon');
-      const container = document.getElementById('jitsi-container');
-
-      icon.innerText = isVideo ? '📹' : '📞';
-      title.innerText = isVideo ? `مكالمة فيديو مع: ${currentChatTargetName}` : `مكالمة صوتية مع: ${currentChatTargetName}`;
-
-      modal.classList.remove('hidden');
-      container.innerHTML = '';
-
-      // اسم الغرفة مشفر وفريد للختمة لضمان خصوصية تامة
       let roomCode = '';
       if (currentChatTarget === 'group') {
         roomCode = 'QuranKhatmaGroupCall_2026';
       } else {
         const users = [myUsername, currentChatTarget].sort();
         roomCode = 'QuranKhatmaPrivate_' + users.map(u => encodeURIComponent(u)).join('_with_');
+
+        // إرسال إشارة الرنين لهاتف الطرف الآخر
+        const targetCleanKey = currentChatTarget.replace(/[.#$\[\]]/g, '_');
+        callsRef.child(targetCleanKey).set({
+          caller: myUsername,
+          roomCode: roomCode,
+          isVideo: isVideo,
+          status: 'ringing',
+          timestamp: Date.now()
+        });
       }
+
+      launchJitsiCall(roomCode, isVideo, currentChatTargetName);
+
+      // تنبيه في المحادثة
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+      db.ref(getChatRoomPath()).push({
+        sender: myUsername,
+        text: isVideo ? '📹 بدأ مكالمة فيديو مباشرة...' : '📞 بدأ مكالمة صوتية مباشرة...',
+        type: 'text',
+        time: timeStr,
+        timestamp: Date.now()
+      });
+    }
+
+    function launchJitsiCall(roomCode, isVideo, targetTitle) {
+      const modal = document.getElementById('call-modal');
+      const title = document.getElementById('call-modal-title');
+      const icon = document.getElementById('call-icon');
+      const container = document.getElementById('jitsi-container');
+
+      icon.innerText = isVideo ? '📹' : '📞';
+      title.innerText = isVideo ? `مكالمة فيديو مع: ${targetTitle}` : `مكالمة صوتية مع: ${targetTitle}`;
+
+      modal.classList.remove('hidden');
+      container.innerHTML = '';
 
       const options = {
         roomName: roomCode,
         width: '100%',
         height: '100%',
         parentNode: container,
-        userInfo: {
-          displayName: myUsername
-        },
+        userInfo: { displayName: myUsername },
         configOverwrite: {
           startWithAudioMuted: false,
           startWithVideoMuted: !isVideo,
@@ -353,30 +505,15 @@
           disableDeepLinking: true
         },
         interfaceConfigOverwrite: {
-          TOOLBAR_BUTTONS: [
-            'microphone', 'camera', 'hangup', 'tileview', 'videoquality'
-          ]
+          TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'tileview', 'videoquality']
         }
       };
 
       try {
         jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
-        jitsiApi.addEventListeners({
-          readyToClose: endCall
-        });
-
-        // إرسال تنبيه في المحادثة ببدء الاتصال
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
-        db.ref(getChatRoomPath()).push({
-          sender: myUsername,
-          text: isVideo ? '📹 بدأ مكالمة فيديو مباشرة...' : '📞 بدأ مكالمة صوتية مباشرة...',
-          type: 'text',
-          time: timeStr,
-          timestamp: Date.now()
-        });
+        jitsiApi.addEventListeners({ readyToClose: endCall });
       } catch (err) {
-        alert('حدث خطأ أثناء بدء الاتصال. يرجى التأكد من اتصال الإنترنت.');
+        alert('حدث خطأ أثناء فتح شاشة الاتصال.');
         endCall();
       }
     }
@@ -388,6 +525,7 @@
       }
       document.getElementById('call-modal').classList.add('hidden');
       document.getElementById('jitsi-container').innerHTML = '';
+      stopRinging();
     }
 
     function updateNotifyBtnUI() {
@@ -410,7 +548,7 @@
       Notification.requestPermission().then((permission) => {
         updateNotifyBtnUI();
         if (permission === 'granted') {
-          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل الختمة على هاتفك.');
+          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل ومكالمات الختمة على هاتفك.');
         } else {
           alert('يرجى السماح بالإشعارات من إعدادات المتصفح.');
         }
@@ -426,7 +564,7 @@
             body: body,
             icon: 'icon.svg',
             badge: 'icon.svg',
-            vibrate: [200, 100, 200]
+            vibrate: [500, 200, 500, 200, 1000]
           });
         } else {
           new Notification(title, { body: body, icon: 'icon.svg' });
@@ -880,6 +1018,7 @@
       localStorage.setItem('chat_username', name);
       nameInput.value = name;
       registerUser(name);
+      listenForIncomingCalls(name);
 
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
