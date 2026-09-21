@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=9">
+  <link rel="manifest" href="manifest.json?v=10">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -47,7 +47,10 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
+        <button id="notify-perm-btn" onclick="requestNotificationPermission()" class="text-xs bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1">
+          <span>🔔</span> <span class="hidden sm:inline">تفعيل الإشعارات</span>
+        </button>
         <button id="header-install-btn" onclick="installApp()" class="hidden text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded-xl transition shadow flex items-center gap-1">
           <span>📲</span> <span>تثبيت</span>
         </button>
@@ -60,7 +63,6 @@
 
   <!-- الصفحة الأولى: شبكة الختمة والأحزاب -->
   <main id="khatma-view" class="max-w-4xl mx-auto px-4 mt-4 w-full flex-1">
-    <!-- لافتة التثبيت للهاتف -->
     <div id="install-banner" class="hidden mb-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-4 rounded-2xl shadow-lg border border-emerald-700/50 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-amber-400/40">
@@ -108,10 +110,9 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
-  <!-- الصفحة الثانية: المحادثة (عامة وخاصة مع دعم الصوت والصور) -->
+  <!-- الصفحة الثانية: المحادثة -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-130px)]">
     
-    <!-- شريط العضو الحالي وقائمة المحادثات -->
     <div class="bg-white border-b border-slate-200 px-3 py-2 flex flex-col gap-2 shadow-sm">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -123,7 +124,6 @@
         </div>
       </div>
 
-      <!-- قائمة الأعضاء المتاحة للتحدث الخاص -->
       <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="users-list-container">
         <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-2.5 py-1 rounded-xl font-bold bg-emerald-800 text-white shadow-sm transition flex items-center gap-1">
           <span>👥 الكل</span>
@@ -134,7 +134,7 @@
     <!-- قائمة الرسائل -->
     <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
 
-    <!-- مؤشر جاري تسجيل الصوت أو رفع الصورة -->
+    <!-- مؤشر جاري تسجيل الصوت -->
     <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-4 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
@@ -143,9 +143,8 @@
       <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
     </div>
 
-    <!-- شريط إدخال الرسائل، الصور، والصوت -->
+    <!-- شريط إدخال الرسائل والصوت والصور -->
     <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
-      <!-- زر اختيار صورة من الكاميرا أو الغاليري (مخفي تحت الزر) -->
       <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
       <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
         <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 24 24">
@@ -155,14 +154,12 @@
 
       <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
       
-      <!-- إرسال نص -->
       <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
         <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
         </svg>
       </button>
 
-      <!-- تسجيل صوتي -->
       <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
         <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -222,6 +219,14 @@
   </div>
 
   <script>
+    // 1. تسجيل الـ Service Worker
+    let swRegistration = null;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then((reg) => {
+        swRegistration = reg;
+      }).catch((err) => console.log('SW registration error:', err));
+    }
+
     // إعدادات Firebase
     const firebaseConfig = {
       databaseURL: "https://quran-khatma-3b53e-default-rtdb.firebaseio.com/"
@@ -238,6 +243,7 @@
     let selectedHizbId = null;
     let allUsers = {};
     let messagesListener = null;
+    let isInitialLoad = true;
 
     // استرجاع وحفظ اسم المستخدم
     const nameInput = document.getElementById('user-display-name');
@@ -264,6 +270,41 @@
         name: name,
         lastActive: Date.now()
       });
+    }
+
+    // طلب صلاحية الإشعارات
+    function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        alert('المتصفح لا يدعم الإشعارات.');
+        return;
+      }
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          document.getElementById('notify-perm-btn').classList.add('hidden');
+          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل المجموعة والخاص مباشرة على هاتفك.');
+        } else {
+          alert('يرجى السماح بالإشعارات من إعدادات المتصفح.');
+        }
+      });
+    }
+
+    if (window.Notification && Notification.permission === 'granted') {
+      document.getElementById('notify-perm-btn').classList.add('hidden');
+    }
+
+    function showSystemNotification(title, body) {
+      if (window.Notification && Notification.permission === 'granted') {
+        if (swRegistration && 'showNotification' in swRegistration) {
+          swRegistration.showNotification(title, {
+            body: body,
+            icon: 'icon.svg',
+            badge: 'icon.svg',
+            vibrate: [200, 100, 200]
+          });
+        } else {
+          new Notification(title, { body: body, icon: 'icon.svg' });
+        }
+      }
     }
 
     // مزامنة قائمة الأعضاء
@@ -304,6 +345,7 @@
       currentChatTargetName = displayName;
       document.getElementById('chat-target-name').innerText = displayName;
       renderUsersList();
+      isInitialLoad = true;
       loadChatMessages();
     }
 
@@ -338,7 +380,8 @@
         container.appendChild(headerNote);
 
         if (data) {
-          Object.values(data).forEach(msg => {
+          const msgsArray = Object.values(data);
+          msgsArray.forEach(msg => {
             const isMe = myUsername && msg.sender === myUsername;
             const bubble = document.createElement('div');
             bubble.className = `max-w-[85%] sm:max-w-[70%] rounded-2xl p-2.5 shadow-sm flex flex-col ${
@@ -372,8 +415,20 @@
             `;
             container.appendChild(bubble);
           });
+
+          // إطلاق إشعار الهاتف إذا وصل ميساج جديد وكان التطبيق في الخلفية
+          if (!isInitialLoad && msgsArray.length > 0) {
+            const lastMsg = msgsArray[msgsArray.length - 1];
+            if (lastMsg.sender !== myUsername) {
+              let bodyText = lastMsg.text || (lastMsg.type === 'audio' ? '🎙️ رسالة صوتية جديدة' : '📷 صورة جديدة');
+              showSystemNotification(`رسالة من ${lastMsg.sender}`, bodyText);
+            }
+          }
+          isInitialLoad = false;
+
           container.scrollTop = container.scrollHeight;
         } else {
+          isInitialLoad = false;
           const empty = document.createElement('div');
           empty.className = 'text-center text-slate-400 text-xs py-6';
           empty.innerText = 'لا توجد رسائل سابقة هنا. ابدأ المحادثة الآن 🌿';
@@ -413,7 +468,6 @@
       textInp.value = '';
     }
 
-    // معالجة وضغط الصورة قبل الإرسال
     function handleImageSelection(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -429,11 +483,10 @@
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          // تصغير أبعاد الصورة لضمان حجم خفيف جداً
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const maxDim = 800; // أقصى عرض أو طول 800 بكسل
+          const maxDim = 800;
 
           if (width > height && width > maxDim) {
             height = Math.round((height * maxDim) / width);
@@ -448,9 +501,7 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // ضغط الصورة بجودة JPEG 0.65 ليكون حجمها ضئيل جداً
           const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
-
           const now = new Date();
           const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
 
@@ -469,7 +520,7 @@
       reader.readAsDataURL(file);
     }
 
-    // مسجل الصوت المباشر (Base64)
+    // مسجل الصوت المباشر
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
@@ -561,6 +612,7 @@
         tabChatBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition relative';
         resetBtn.classList.add('hidden');
         subTitle.innerText = 'المحادثة العامة والخاصة بين الأعضاء';
+        isInitialLoad = true;
         loadChatMessages();
       }
     }
