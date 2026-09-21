@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ختمة القرآن الكريم والتواصل</title>
+  <title>ختمة القرآن الكريم والتواصل المباشر</title>
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=7">
+  <link rel="manifest" href="manifest.json?v=8">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,8 +19,8 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
-    #chat-container::-webkit-scrollbar { width: 4px; }
-    #chat-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    #chat-container::-webkit-scrollbar, #users-list-container::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-thumb, #users-list-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
     .chat-bg {
       background-color: #efeae2;
       background-image: radial-gradient(#d1d7db 1px, transparent 1px);
@@ -28,7 +28,7 @@
     }
   </style>
 
-  <!-- مكتبات Firebase الأساسية فقط (مجانية بالكامل) -->
+  <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -36,14 +36,14 @@
 
   <!-- شريط العنوان -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-20 border-b border-emerald-800">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-inner border border-amber-400/40 flex items-center justify-center shrink-0 bg-emerald-950">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex justify-between items-center gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl overflow-hidden shadow-inner border border-amber-400/40 flex items-center justify-center shrink-0 bg-emerald-950">
           <img src="icon.svg" alt="شعار القرآن الكريم" class="w-full h-full object-cover">
         </div>
         <div>
-          <h1 class="text-xl font-bold quran-font text-amber-300">ختمة القرآن الكريم الجماعية</h1>
-          <p id="sub-header-title" class="text-[11px] text-emerald-200">اختر حِزبك وساهم في إتمام الختمة المباركة</p>
+          <h1 class="text-lg font-bold quran-font text-amber-300">ختمة القرآن الكريم والتواصل</h1>
+          <p id="sub-header-title" class="text-[10px] text-emerald-200">اختر حِزبك وساهم في الختمة المباركة</p>
         </div>
       </div>
 
@@ -77,83 +77,95 @@
     </div>
 
     <!-- كارت نسبة تقدم الختمة -->
-    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+    <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
       <div class="flex justify-between items-center mb-2">
-        <span class="font-bold text-slate-700 flex items-center gap-2">
+        <span class="font-bold text-slate-700 text-xs sm:text-sm flex items-center gap-2">
           <span>📖</span> مستوى إنجاز الختمة
         </span>
-        <span id="progress-text" class="text-emerald-800 font-bold">جاري التحميل...</span>
+        <span id="progress-text" class="text-emerald-800 font-bold text-xs sm:text-sm">جاري التحميل...</span>
       </div>
-      <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-200">
-        <div id="progress-bar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200">
+        <div id="progress-bar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
       </div>
 
-      <!-- دليل الألوان -->
-      <div class="flex flex-wrap gap-4 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-600">
+      <div class="flex flex-wrap gap-4 mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-600">
         <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block shadow-sm"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
           <span>متاح للاختيار</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
           <span>قيد القراءة</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-sky-600 inline-block shadow-sm"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block"></span>
           <span>تمت القراءة</span>
         </div>
       </div>
     </div>
 
-    <!-- شبكة الـ 60 حزب -->
+    <!-- شبكة الأحزاب -->
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
-  <!-- الصفحة الثانية: محادثة WhatsApp الجماعية المتكاملة مع الأوديو المباشر -->
-  <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-140px)]">
-    <!-- قائمة الرسائل -->
-    <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-3 chat-bg flex flex-col">
-      <div class="text-center my-2">
-        <span class="bg-emerald-100 text-emerald-800 text-[11px] px-3 py-1 rounded-full shadow-sm">
-          🌿 مرحباً بكم في محادثة الختمة الصوتية والكتابية
-        </span>
+  <!-- الصفحة الثانية: المحادثة (عامة وخاصة بين الأعضاء) -->
+  <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-130px)]">
+    
+    <!-- شريط العضو الحالي وقائمة المحادثات -->
+    <div class="bg-white border-b border-slate-200 px-3 py-2 flex flex-col gap-2 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500">حسابك:</span>
+          <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-600 focus:outline-none w-36">
+        </div>
+        <div id="active-chat-title" class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
+          <span>👥</span> <span id="chat-target-name">المجموعة العامة</span>
+        </div>
+      </div>
+
+      <!-- قائمة الأعضاء المتاحة للتحدث الخاص -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="users-list-container">
+        <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-2.5 py-1 rounded-xl font-bold bg-emerald-800 text-white shadow-sm transition flex items-center gap-1">
+          <span>👥 الكل</span>
+        </button>
+        <!-- كروت الأعضاء ستضاف هنا تلقائياً -->
       </div>
     </div>
 
+    <!-- قائمة الرسائل (العامة أو الخاصة) -->
+    <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
+
     <!-- مؤشر جاري تسجيل الصوت -->
-    <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-4 py-2 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
+    <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-4 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
         <span>جاري تسجيل رسالة صوتية... اضغط على الميكروفون مجدداً للإرسال</span>
       </div>
-      <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-sm">إلغاء ✕</button>
+      <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
     </div>
 
-    <!-- شريط إرسال الرسائل والصوتيات -->
-    <div class="bg-slate-100 border-t border-slate-200 p-2.5 flex flex-col gap-2">
-      <div class="flex items-center gap-2">
-        <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="w-1/3 max-w-[130px] border border-slate-300 rounded-xl px-2.5 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white">
-        <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
-        
-        <!-- زر إرسال النص -->
-        <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
-          <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </button>
+    <!-- شريط إدخال الرسائل والصوت -->
+    <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
+      <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
+      
+      <!-- إرسال نص -->
+      <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
 
-        <!-- زر تسجيل الأوديو -->
-        <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
-          <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-          </svg>
-        </button>
-      </div>
+      <!-- تسجيل صوتي -->
+      <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+        <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      </button>
     </div>
   </main>
 
-  <!-- شريط التنقل السفلي الثابت (Bottom Bar) -->
+  <!-- شريط التنقل السفلي الثابت -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex justify-around items-center py-2 shadow-lg">
     <button onclick="switchTab('khatma')" id="tab-khatma-btn" class="flex flex-col items-center gap-1 text-emerald-800 font-bold transition">
       <span class="text-xl">📖</span>
@@ -161,12 +173,12 @@
     </button>
     <button onclick="switchTab('chat')" id="tab-chat-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition relative">
       <span class="text-xl">💬</span>
-      <span class="text-[11px]">المحادثة والصوتيات</span>
+      <span class="text-[11px]">المحادثات والأعضاء</span>
       <span id="unread-dot" class="w-2 h-2 rounded-full bg-amber-500 absolute top-0 right-3 hidden"></span>
     </button>
   </nav>
 
-  <!-- نافذة تفاصيل الحزب المنبثقة -->
+  <!-- نافذة الحزب المنبثقة -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
@@ -198,25 +210,253 @@
   </div>
 
   <script>
-    // 1. إعدادات Firebase
+    // إعدادات Firebase
     const firebaseConfig = {
       databaseURL: "https://quran-khatma-3b53e-default-rtdb.firebaseio.com/"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const khatmaRef = db.ref('khatma_ahzab');
-    const messagesRef = db.ref('khatma_messages');
+    const usersRef = db.ref('khatma_users');
 
     let currentTab = 'khatma';
+    let currentChatTarget = 'group'; // 'group' أو اسم العضو
+    let currentChatTargetName = 'المجموعة العامة';
     let ahzab = [];
     let selectedHizbId = null;
+    let allUsers = {};
+    let messagesListener = null;
 
-    // حفظ واسترجاع اسم المستخدم تلقائياً
+    // استرجاع وحفظ اسم المستخدم
     const nameInput = document.getElementById('user-display-name');
-    nameInput.value = localStorage.getItem('chat_username') || '';
-    nameInput.addEventListener('input', (e) => {
-      localStorage.setItem('chat_username', e.target.value.trim());
+    let myUsername = localStorage.getItem('chat_username') || '';
+    if (myUsername) {
+      nameInput.value = myUsername;
+      registerUser(myUsername);
+    }
+
+    nameInput.addEventListener('change', (e) => {
+      const val = e.target.value.trim();
+      if (val) {
+        myUsername = val;
+        localStorage.setItem('chat_username', myUsername);
+        registerUser(myUsername);
+        loadChatMessages();
+      }
     });
+
+    function registerUser(name) {
+      if (!name) return;
+      const cleanKey = name.replace(/[.#$\[\]]/g, '_');
+      usersRef.child(cleanKey).set({
+        name: name,
+        lastActive: Date.now()
+      });
+    }
+
+    // مزامنة قائمة الأعضاء
+    usersRef.on('value', (snapshot) => {
+      allUsers = snapshot.val() || {};
+      renderUsersList();
+    });
+
+    function renderUsersList() {
+      const container = document.getElementById('users-list-container');
+      container.innerHTML = `
+        <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${
+          currentChatTarget === 'group' ? 'bg-emerald-800 text-white shadow' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+        }">
+          <span>👥 الكل (عام)</span>
+        </button>
+      `;
+
+      Object.values(allUsers).forEach(u => {
+        if (!u.name || u.name === myUsername) return;
+        const btn = document.createElement('button');
+        const isActive = currentChatTarget === u.name;
+        btn.onclick = () => selectChatTarget(u.name, u.name);
+        btn.className = `shrink-0 text-[11px] px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+          isActive ? 'bg-emerald-800 text-white shadow' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+        }`;
+        btn.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+          <span>👤 ${u.name}</span>
+          <span class="text-[9px] text-amber-500 font-normal">خاص 🔒</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function selectChatTarget(target, displayName) {
+      currentChatTarget = target;
+      currentChatTargetName = displayName;
+      document.getElementById('chat-target-name').innerText = displayName;
+      renderUsersList();
+      loadChatMessages();
+    }
+
+    function getChatRoomPath() {
+      if (currentChatTarget === 'group') {
+        return 'khatma_messages/group';
+      }
+      // غرفة خاصة بين عضوين: نرتب الأسماء أبجدياً لضمان نفس الغرفة للطرفين
+      const users = [myUsername, currentChatTarget].sort();
+      const roomKey = users.map(u => u.replace(/[.#$\[\]]/g, '_')).join('__with__');
+      return `khatma_messages/private/${roomKey}`;
+    }
+
+    function loadChatMessages() {
+      if (messagesListener) {
+        messagesListener.off();
+      }
+      const path = getChatRoomPath();
+      messagesListener = db.ref(path).limitToLast(40);
+
+      const container = document.getElementById('chat-container');
+      container.innerHTML = '<div class="text-center text-slate-400 text-xs py-4">جاري تحميل الرسائل...</div>';
+
+      messagesListener.on('value', (snapshot) => {
+        container.innerHTML = '';
+        const data = snapshot.val();
+
+        // لافتة نوع المحادثة
+        const headerNote = document.createElement('div');
+        headerNote.className = 'text-center my-2';
+        headerNote.innerHTML = currentChatTarget === 'group'
+          ? `<span class="bg-emerald-100 text-emerald-800 text-[11px] px-3 py-1 rounded-full shadow-sm">🌿 المحادثة العامة لجميع المشاركين</span>`
+          : `<span class="bg-amber-100 text-amber-900 text-[11px] px-3 py-1 rounded-full shadow-sm">🔒 محادثة خاصة وسرية بينك وبين ${currentChatTarget}</span>`;
+        container.appendChild(headerNote);
+
+        if (data) {
+          Object.values(data).forEach(msg => {
+            const isMe = myUsername && msg.sender === myUsername;
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[85%] sm:max-w-[70%] rounded-2xl p-2.5 shadow-sm flex flex-col ${
+              isMe ? 'self-end bg-[#d9fdd3] text-slate-800 rounded-br-none' : 'self-start bg-white text-slate-800 rounded-bl-none border border-slate-100'
+            }`;
+
+            let contentHtml = '';
+            if (msg.type === 'audio') {
+              contentHtml = `
+                <div class="flex items-center gap-2 pt-1 pb-1">
+                  <span class="text-lg">🎙️</span>
+                  <audio controls src="${msg.audioData}" class="w-48 sm:w-56 h-8"></audio>
+                </div>
+              `;
+            } else {
+              contentHtml = `<p class="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">${msg.text}</p>`;
+            }
+
+            bubble.innerHTML = `
+              <div class="flex items-center justify-between gap-4 mb-0.5">
+                <span class="font-bold text-[11px] ${isMe ? 'text-emerald-800' : 'text-amber-700'}">${msg.sender}</span>
+                <span class="text-[9px] text-slate-400">${msg.time}</span>
+              </div>
+              ${contentHtml}
+            `;
+            container.appendChild(bubble);
+          });
+          container.scrollTop = container.scrollHeight;
+        } else {
+          const empty = document.createElement('div');
+          empty.className = 'text-center text-slate-400 text-xs py-6';
+          empty.innerText = 'لا توجد رسائل سابقة هنا. ابدأ المحادثة الآن 🌿';
+          container.appendChild(empty);
+        }
+      });
+    }
+
+    function sendTextMessage() {
+      const textInp = document.getElementById('message-text');
+      const text = textInp.value.trim();
+      if (!myUsername) {
+        alert('يرجى كتابة اسمك أولاً في خانة "حسابك"');
+        nameInput.focus();
+        return;
+      }
+      if (!text) return;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+
+      db.ref(getChatRoomPath()).push({
+        sender: myUsername,
+        text: text,
+        type: 'text',
+        time: timeStr,
+        timestamp: Date.now()
+      });
+
+      textInp.value = '';
+    }
+
+    // مسجل الصوت المباشر (Base64)
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleAudioRecording() {
+      if (!myUsername) {
+        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل التسجيل الصوتي');
+        nameInput.focus();
+        return;
+      }
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            if (audioChunks.length > 0) {
+              const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = () => {
+                const base64Audio = reader.result;
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+
+                db.ref(getChatRoomPath()).push({
+                  sender: myUsername,
+                  audioData: base64Audio,
+                  type: 'audio',
+                  time: timeStr,
+                  timestamp: Date.now()
+                });
+              };
+            }
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          document.getElementById('recording-status').classList.remove('hidden');
+          document.getElementById('mic-btn').className = 'bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-xl transition shadow animate-bounce flex items-center justify-center shrink-0';
+        } catch (err) {
+          alert('يرجى السماح بالوصول إلى الميكروفون لتسجيل الرسالة الصوتية.');
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('recording-status').classList.add('hidden');
+        document.getElementById('mic-btn').className = 'bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0';
+      }
+    }
+
+    function cancelRecording() {
+      if (mediaRecorder && isRecording) {
+        audioChunks = [];
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('recording-status').classList.add('hidden');
+        document.getElementById('mic-btn').className = 'bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0';
+      }
+    }
 
     // التبديل بين الختمة والمحادثة
     function switchTab(tab) {
@@ -241,14 +481,12 @@
         tabKhatmaBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition';
         tabChatBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition relative';
         resetBtn.classList.add('hidden');
-        subTitle.innerText = 'دردشة المشاركين وتسجيلات الصوت المباشرة';
-        document.getElementById('unread-dot').classList.add('hidden');
-        const container = document.getElementById('chat-container');
-        setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+        subTitle.innerText = 'المحادثة العامة والخاصة بين الأعضاء';
+        loadChatMessages();
       }
     }
 
-    // 2. مزامنة الأحزاب
+    // مزامنة الأحزاب
     khatmaRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -332,7 +570,7 @@
         statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
         statusBox.innerText = 'هذا الحزب غير محجوز ومتاح للقراءة.';
         nameInputGroup.style.display = 'block';
-        nameInp.value = localStorage.getItem('chat_username') || '';
+        nameInp.value = myUsername || '';
         actionsContainer.innerHTML = `
           <button onclick="reserveHizb()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2.5 rounded-xl transition shadow">
             حجز وقراءة هذا الحزب
@@ -371,8 +609,11 @@
     function reserveHizb() {
       const name = document.getElementById('reader-name-input').value.trim();
       if (!name) { alert('يرجى كتابة الاسم أولاً.'); return; }
+      myUsername = name;
       localStorage.setItem('chat_username', name);
       nameInput.value = name;
+      registerUser(name);
+
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
         db.ref(`khatma_ahzab/${index}`).update({ status: 'reading', reader: name });
@@ -403,144 +644,6 @@
           resetData.push({ id: i, status: 'available', reader: '' });
         }
         khatmaRef.set(resetData);
-      }
-    }
-
-    // 3. المحادثة والصوتيات المباشرة
-    messagesRef.limitToLast(40).on('value', (snapshot) => {
-      const container = document.getElementById('chat-container');
-      container.innerHTML = '';
-      const data = snapshot.val();
-      const myName = localStorage.getItem('chat_username') || '';
-
-      if (data) {
-        Object.values(data).forEach(msg => {
-          const isMe = myName && msg.sender === myName;
-          const bubble = document.createElement('div');
-          bubble.className = `max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 shadow-sm flex flex-col ${
-            isMe ? 'self-end bg-[#d9fdd3] text-slate-800 rounded-br-none' : 'self-start bg-white text-slate-800 rounded-bl-none border border-slate-100'
-          }`;
-
-          let contentHtml = '';
-          if (msg.type === 'audio') {
-            contentHtml = `
-              <div class="flex items-center gap-2 pt-1 pb-1">
-                <span class="text-lg">🎙️</span>
-                <audio controls src="${msg.audioData}" class="w-48 sm:w-56 h-8"></audio>
-              </div>
-            `;
-          } else {
-            contentHtml = `<p class="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">${msg.text}</p>`;
-          }
-
-          bubble.innerHTML = `
-            <div class="flex items-center justify-between gap-4 mb-1">
-              <span class="font-bold text-[11px] ${isMe ? 'text-emerald-800' : 'text-amber-700'}">${msg.sender}</span>
-              <span class="text-[9px] text-slate-400">${msg.time}</span>
-            </div>
-            ${contentHtml}
-          `;
-          container.appendChild(bubble);
-        });
-        container.scrollTop = container.scrollHeight;
-        if (currentTab !== 'chat') {
-          document.getElementById('unread-dot').classList.remove('hidden');
-        }
-      }
-    });
-
-    function sendTextMessage() {
-      const sender = nameInput.value.trim();
-      const textInp = document.getElementById('message-text');
-      const text = textInp.value.trim();
-
-      if (!sender) {
-        alert('يرجى إدخال اسمك أولاً');
-        nameInput.focus();
-        return;
-      }
-      if (!text) return;
-
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
-
-      messagesRef.push({
-        sender: sender,
-        text: text,
-        type: 'text',
-        time: timeStr,
-        timestamp: Date.now()
-      });
-
-      textInp.value = '';
-    }
-
-    // 4. مسجل الصوت المباشر (Base64 Audio Recorder)
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-
-    async function toggleAudioRecording() {
-      const sender = nameInput.value.trim();
-      if (!sender) {
-        alert('يرجى إدخال اسمك أولاً قبل التسجيل الصوتي');
-        nameInput.focus();
-        return;
-      }
-
-      if (!isRecording) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
-
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) audioChunks.push(e.data);
-          };
-
-          mediaRecorder.onstop = () => {
-            if (audioChunks.length > 0) {
-              const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-              const reader = new FileReader();
-              reader.readAsDataURL(audioBlob);
-              reader.onloadend = () => {
-                const base64Audio = reader.result;
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
-
-                messagesRef.push({
-                  sender: sender,
-                  audioData: base64Audio,
-                  type: 'audio',
-                  time: timeStr,
-                  timestamp: Date.now()
-                });
-              };
-            }
-          };
-
-          mediaRecorder.start();
-          isRecording = true;
-          document.getElementById('recording-status').classList.remove('hidden');
-          document.getElementById('mic-btn').className = 'bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-xl transition shadow animate-bounce flex items-center justify-center shrink-0';
-        } catch (err) {
-          alert('يرجى السماح بالوصول إلى الميكروفون لتسجيل الرسالة الصوتية.');
-        }
-      } else {
-        mediaRecorder.stop();
-        isRecording = false;
-        document.getElementById('recording-status').classList.add('hidden');
-        document.getElementById('mic-btn').className = 'bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0';
-      }
-    }
-
-    function cancelRecording() {
-      if (mediaRecorder && isRecording) {
-        audioChunks = [];
-        mediaRecorder.stop();
-        isRecording = false;
-        document.getElementById('recording-status').classList.add('hidden');
-        document.getElementById('mic-btn').className = 'bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0';
       }
     }
 
