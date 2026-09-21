@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ختمة القرآن الكريم الجماعية (المصحف المثمن - ورش)</title>
+  <title>ختمة القرآن الكريم الجماعية</title>
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=4">
+  <link rel="manifest" href="manifest.json?v=5">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,7 +38,7 @@
         </div>
         <div class="text-center sm:text-right">
           <h1 class="text-2xl font-bold quran-font text-amber-300 tracking-wide">ختمة القرآن الكريم الجماعية</h1>
-          <p class="text-xs text-emerald-200">المصحف المثمن برواية ورش عن نافع (كل ثمن في صفحة)</p>
+          <p class="text-xs text-emerald-200">اختر حِزبك واقرأه مباشرة، وساهم في إتمام الختمة</p>
         </div>
       </div>
 
@@ -63,7 +63,7 @@
         </div>
         <div>
           <h4 class="font-bold text-sm text-amber-300">تثبيت التطبيق على هاتفك</h4>
-          <p class="text-xs text-emerald-100">لتصل للمصحف المثمن وأحزاب الختمة بضغطة زر واحدة</p>
+          <p class="text-xs text-emerald-100">لتصل لأحزاب الختمة بضغطة زر واحدة في أي وقت</p>
         </div>
       </div>
       <button onclick="installApp()" class="bg-amber-400 text-slate-900 font-bold text-xs px-4 py-2.5 rounded-xl shadow hover:bg-amber-300 transition shrink-0">
@@ -122,10 +122,10 @@
 
         <div class="bg-emerald-50 border border-emerald-100 p-3.5 rounded-xl flex justify-between items-center">
           <div>
-            <span class="text-xs text-emerald-900 font-bold block">المصحف المثمن (ورش):</span>
-            <span id="page-indicator" class="text-[11px] text-emerald-700"></span>
+            <span class="text-xs text-emerald-900 font-bold block">قراءة الحزب مباشرة:</span>
+            <span id="hizb-indicator" class="text-[11px] text-emerald-700"></span>
           </div>
-          <a id="read-online-link" href="#" target="_blank" class="text-xs bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-xl transition font-bold inline-block shadow">
+          <a id="read-online-link" href="#" target="_blank" class="text-xs bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl transition font-bold inline-block shadow">
             فتح في المصحف ↗
           </a>
         </div>
@@ -339,16 +339,13 @@
       const nameInputGroup = document.getElementById('name-input-group');
       const actionsContainer = document.getElementById('modal-actions');
       const readLink = document.getElementById('read-online-link');
-      const pageIndicator = document.getElementById('page-indicator');
+      const hizbIndicator = document.getElementById('hizb-indicator');
 
-      const startThumn = ((hizb.id - 1) * 8) + 1;
-      const endThumn = hizb.id * 8;
-      
-      // فتح المصحف الإلكتروني برواية ورش مباشرة
-      readLink.href = `https://quran.ksu.edu.sa/index.php#aya=1_1&m=warsh&p=${Math.ceil((hizb.id * 10) - 9)}`;
-      pageIndicator.innerText = `الحزب ${hizb.id} (الأثمان: من ${startThumn} إلى ${endThumn})`;
+      // رابط مباشر ودقيق لنفس الحزب المختار بالعربية وبدون تفسير
+      readLink.href = `https://quran.com/ar/hizb/${hizb.id}`;
+      hizbIndicator.innerText = `قراءة آيات الحزب ${hizb.id} كاملة بالرسم العثماني`;
 
-      title.innerText = `الحزب رقم ${hizb.id} (المصحف المثمن)`;
+      title.innerText = `الحزب رقم ${hizb.id}`;
       actionsContainer.innerHTML = '';
 
       if (hizb.status === 'available') {
