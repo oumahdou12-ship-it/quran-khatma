@@ -20,10 +20,14 @@
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
   </style>
+
+  <!-- مكتبات Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
 
-  <!-- شريط العنوان مع أيقونة المصحف الشريف -->
+  <!-- شريط العنوان -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-10 border-b border-emerald-800">
     <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
       <div class="flex items-center gap-3">
@@ -49,7 +53,7 @@
 
   <main class="max-w-4xl mx-auto px-4 mt-4">
 
-    <!-- لافتة التثبيت للهاتف مع لوغو المصحف -->
+    <!-- لافتة التثبيت للهاتف -->
     <div id="install-banner" class="hidden mb-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-4 rounded-2xl shadow-lg border border-emerald-700/50 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-amber-400/40">
@@ -71,7 +75,7 @@
         <span class="font-bold text-slate-700 flex items-center gap-2">
           <span>📖</span> مستوى إنجاز الختمة
         </span>
-        <span id="progress-text" class="text-emerald-800 font-bold">0 / 60 حزب (0%)</span>
+        <span id="progress-text" class="text-emerald-800 font-bold">جاري التحميل...</span>
       </div>
       <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-200">
         <div id="progress-bar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -130,6 +134,15 @@
   </div>
 
   <script>
+    // إعدادات Firebase
+    const firebaseConfig = {
+      databaseURL: "https://quran-khatma-3b53e-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const khatmaRef = db.ref('khatma_ahzab');
+
+    // جدول صفحات الأحزاب
     const hizbPages = {
       1: 1, 2: 11, 3: 22, 4: 32, 5: 42, 6: 51, 7: 62, 8: 72, 9: 82, 10: 92,
       11: 102, 12: 111, 13: 121, 14: 132, 15: 142, 16: 151, 17: 162, 18: 173, 19: 182, 20: 192,
@@ -139,6 +152,26 @@
       51: 502, 52: 513, 53: 523, 54: 531, 55: 542, 56: 553, 57: 562, 58: 572, 59: 582, 60: 591
     };
 
+    let ahzab = [];
+    let selectedHizbId = null;
+
+    // المزامنة الحية (Realtime Listener)
+    khatmaRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        ahzab = data;
+      } else {
+        ahzab = [];
+        for (let i = 1; i <= 60; i++) {
+          ahzab.push({ id: i, status: 'available', reader: '' });
+        }
+        khatmaRef.set(ahzab);
+      }
+      renderGrid();
+      updateProgress();
+    });
+
+    // PWA Install Prompt
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -162,26 +195,6 @@
       } else {
         alert('لتثبيت التطبيق: اضغط على خيارات المتصفح (3 نقاط) ثم اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".');
       }
-    }
-
-    let ahzab = [];
-    const savedData = localStorage.getItem('quran_khatma_data');
-
-    if (savedData) {
-      ahzab = JSON.parse(savedData);
-    } else {
-      for (let i = 1; i <= 60; i++) {
-        ahzab.push({ id: i, status: 'available', reader: '' });
-      }
-      saveData();
-    }
-
-    let selectedHizbId = null;
-
-    function saveData() {
-      localStorage.setItem('quran_khatma_data', JSON.stringify(ahzab));
-      renderGrid();
-      updateProgress();
     }
 
     function renderGrid() {
@@ -220,7 +233,7 @@
     }
 
     function updateProgress() {
-      const completedCount = ahzab.filter(h => h.status === 'completed').length;
+      const completedCount = ahzab.filter(h => h && h.status === 'completed').length;
       const percent = Math.round((completedCount / 60) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
       document.getElementById('progress-text').innerText = `${completedCount} / 60 حزب (${percent}%)`;
@@ -228,7 +241,9 @@
 
     function openHizbModal(id) {
       selectedHizbId = id;
-      const hizb = ahzab.find(h => h.id === id);
+      const hizb = ahzab.find(h => h && h.id === id);
+      if (!hizb) return;
+
       const modal = document.getElementById('action-modal');
       const title = document.getElementById('modal-title');
       const statusBox = document.getElementById('modal-status-box');
@@ -292,35 +307,44 @@
         alert('يرجى كتابة الاسم أولاً.');
         return;
       }
-      const hizb = ahzab.find(h => h.id === selectedHizbId);
-      hizb.status = 'reading';
-      hizb.reader = name;
-      saveData();
+      const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
+      if (index !== -1) {
+        db.ref(`khatma_ahzab/${index}`).update({
+          status: 'reading',
+          reader: name
+        });
+      }
       closeModal();
     }
 
     function completeHizb() {
-      const hizb = ahzab.find(h => h.id === selectedHizbId);
-      hizb.status = 'completed';
-      saveData();
+      const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
+      if (index !== -1) {
+        db.ref(`khatma_ahzab/${index}`).update({
+          status: 'completed'
+        });
+      }
       closeModal();
     }
 
     function cancelHizb() {
-      const hizb = ahzab.find(h => h.id === selectedHizbId);
-      hizb.status = 'available';
-      hizb.reader = '';
-      saveData();
+      const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
+      if (index !== -1) {
+        db.ref(`khatma_ahzab/${index}`).update({
+          status: 'available',
+          reader: ''
+        });
+      }
       closeModal();
     }
 
     function resetKhatma() {
       if (confirm('هل أنت متأكد من رغبتك في تصفير الختمة والبدء من جديد؟')) {
-        ahzab.forEach(h => {
-          h.status = 'available';
-          h.reader = '';
-        });
-        saveData();
+        const resetData = [];
+        for (let i = 1; i <= 60; i++) {
+          resetData.push({ id: i, status: 'available', reader: '' });
+        }
+        khatmaRef.set(resetData);
       }
     }
 
@@ -328,9 +352,6 @@
       const modal = document.getElementById('action-modal');
       if (event.target === modal) closeModal();
     };
-
-    renderGrid();
-    updateProgress();
   </script>
 </body>
 </html>
