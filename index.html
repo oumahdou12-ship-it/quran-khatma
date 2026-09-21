@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=8">
+  <link rel="manifest" href="manifest.json?v=9">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -108,7 +108,7 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3"></div>
   </main>
 
-  <!-- الصفحة الثانية: المحادثة (عامة وخاصة بين الأعضاء) -->
+  <!-- الصفحة الثانية: المحادثة (عامة وخاصة مع دعم الصوت والصور) -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-130px)]">
     
     <!-- شريط العضو الحالي وقائمة المحادثات -->
@@ -128,24 +128,31 @@
         <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-2.5 py-1 rounded-xl font-bold bg-emerald-800 text-white shadow-sm transition flex items-center gap-1">
           <span>👥 الكل</span>
         </button>
-        <!-- كروت الأعضاء ستضاف هنا تلقائياً -->
       </div>
     </div>
 
-    <!-- قائمة الرسائل (العامة أو الخاصة) -->
+    <!-- قائمة الرسائل -->
     <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
 
-    <!-- مؤشر جاري تسجيل الصوت -->
+    <!-- مؤشر جاري تسجيل الصوت أو رفع الصورة -->
     <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-4 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
-        <span>جاري تسجيل رسالة صوتية... اضغط على الميكروفون مجدداً للإرسال</span>
+        <span id="recording-status-text">جاري تسجيل رسالة صوتية... اضغط على الميكروفون مجدداً للإرسال</span>
       </div>
       <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
     </div>
 
-    <!-- شريط إدخال الرسائل والصوت -->
+    <!-- شريط إدخال الرسائل، الصور، والصوت -->
     <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
+      <!-- زر اختيار صورة من الكاميرا أو الغاليري (مخفي تحت الزر) -->
+      <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+      <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
+        <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M4 4h3l2-2h6l2 2h3a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 3a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z"/>
+        </svg>
+      </button>
+
       <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
       
       <!-- إرسال نص -->
@@ -177,6 +184,11 @@
       <span id="unread-dot" class="w-2 h-2 rounded-full bg-amber-500 absolute top-0 right-3 hidden"></span>
     </button>
   </nav>
+
+  <!-- نافذة تكبير الصورة المنبثقة -->
+  <div id="image-viewer-modal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 hidden" onclick="this.classList.add('hidden')">
+    <img id="enlarged-image" src="" alt="صورة مكبرة" class="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl">
+  </div>
 
   <!-- نافذة الحزب المنبثقة -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -220,7 +232,7 @@
     const usersRef = db.ref('khatma_users');
 
     let currentTab = 'khatma';
-    let currentChatTarget = 'group'; // 'group' أو اسم العضو
+    let currentChatTarget = 'group';
     let currentChatTargetName = 'المجموعة العامة';
     let ahzab = [];
     let selectedHizbId = null;
@@ -299,7 +311,6 @@
       if (currentChatTarget === 'group') {
         return 'khatma_messages/group';
       }
-      // غرفة خاصة بين عضوين: نرتب الأسماء أبجدياً لضمان نفس الغرفة للطرفين
       const users = [myUsername, currentChatTarget].sort();
       const roomKey = users.map(u => u.replace(/[.#$\[\]]/g, '_')).join('__with__');
       return `khatma_messages/private/${roomKey}`;
@@ -319,7 +330,6 @@
         container.innerHTML = '';
         const data = snapshot.val();
 
-        // لافتة نوع المحادثة
         const headerNote = document.createElement('div');
         headerNote.className = 'text-center my-2';
         headerNote.innerHTML = currentChatTarget === 'group'
@@ -341,6 +351,12 @@
                 <div class="flex items-center gap-2 pt-1 pb-1">
                   <span class="text-lg">🎙️</span>
                   <audio controls src="${msg.audioData}" class="w-48 sm:w-56 h-8"></audio>
+                </div>
+              `;
+            } else if (msg.type === 'image') {
+              contentHtml = `
+                <div class="py-1">
+                  <img src="${msg.imageData}" alt="صورة مشاركة" onclick="viewImage('${msg.imageData}')" class="max-w-[200px] sm:max-w-[240px] max-h-60 rounded-xl cursor-pointer hover:opacity-95 transition shadow border border-slate-200">
                 </div>
               `;
             } else {
@@ -366,6 +382,13 @@
       });
     }
 
+    function viewImage(src) {
+      const modal = document.getElementById('image-viewer-modal');
+      const img = document.getElementById('enlarged-image');
+      img.src = src;
+      modal.classList.remove('hidden');
+    }
+
     function sendTextMessage() {
       const textInp = document.getElementById('message-text');
       const text = textInp.value.trim();
@@ -388,6 +411,62 @@
       });
 
       textInp.value = '';
+    }
+
+    // معالجة وضغط الصورة قبل الإرسال
+    function handleImageSelection(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!myUsername) {
+        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل إرسال الصورة');
+        nameInput.focus();
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // تصغير أبعاد الصورة لضمان حجم خفيف جداً
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 800; // أقصى عرض أو طول 800 بكسل
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // ضغط الصورة بجودة JPEG 0.65 ليكون حجمها ضئيل جداً
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
+
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+
+          db.ref(getChatRoomPath()).push({
+            sender: myUsername,
+            imageData: compressedBase64,
+            type: 'image',
+            time: timeStr,
+            timestamp: Date.now()
+          });
+
+          event.target.value = '';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     // مسجل الصوت المباشر (Base64)
