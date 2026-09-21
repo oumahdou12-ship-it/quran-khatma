@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=13">
+  <link rel="manifest" href="manifest.json?v=14">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,6 +31,8 @@
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- مكتبة الاتصال الصوتي والمرئي المجانية -->
+  <script src="https://meet.jit.si/external_api.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
 
@@ -112,24 +114,33 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5"></div>
   </main>
 
-  <!-- الصفحة الثانية: المحادثة -->
+  <!-- الصفحة الثانية: المحادثة والاتصال -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-125px)]">
     <div class="bg-white border-b border-slate-200 px-3 py-2 flex flex-col gap-2 shadow-sm">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5">
           <span class="text-xs text-slate-500">حسابك:</span>
-          <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-600 focus:outline-none w-32">
+          <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-600 focus:outline-none w-28 sm:w-32">
         </div>
 
-        <!-- زر مسح المحادثة محلياً فقط وعنوان الغرفة -->
         <div class="flex items-center gap-1.5">
           <div id="active-chat-title" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
             <span>👥</span> <span id="chat-target-name">المجموعة العامة</span>
           </div>
 
-          <!-- زر المسح الخاص بهاتفي فقط -->
-          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-2 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1 shadow-sm" title="مسح المحادثة من هاتفي فقط">
-            <span>🗑️</span> <span class="hidden sm:inline">مسح عندي</span>
+          <!-- زر مكالمة صوتية 📞 -->
+          <button onclick="startCall(false)" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة صوتية">
+            <span>📞</span>
+          </button>
+
+          <!-- زر مكالمة فيديو 📹 -->
+          <button onclick="startCall(true)" class="text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة فيديو">
+            <span>📹</span>
+          </button>
+
+          <!-- زر مسح المحادثة محلياً 🗑️ -->
+          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-1.5 py-1 rounded-lg text-xs font-medium transition shadow-sm" title="مسح من هاتفي فقط">
+            <span>🗑️</span>
           </button>
         </div>
       </div>
@@ -179,6 +190,24 @@
       </button>
     </div>
   </main>
+
+  <!-- شاشة المكالمة المباشرة (Audio / Vidéo Call Modal) -->
+  <div id="call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col hidden">
+    <div class="bg-slate-900 px-4 py-3 flex justify-between items-center text-white border-b border-slate-800">
+      <div class="flex items-center gap-2">
+        <span id="call-icon" class="text-xl">📞</span>
+        <div>
+          <h3 id="call-modal-title" class="font-bold text-sm text-amber-300">مكالمة مباشرة</h3>
+          <p class="text-[10px] text-slate-400">اتصال مباشر عالي الدقة</p>
+        </div>
+      </div>
+      <button onclick="endCall()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
+        <span>إنهاء المكالمة ✕</span>
+      </button>
+    </div>
+    <!-- حاوية واجهة الاتصال -->
+    <div id="jitsi-container" class="flex-1 w-full h-full bg-slate-950"></div>
+  </div>
 
   <!-- شريط التنقل السفلي -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex justify-around items-center py-2 shadow-lg">
@@ -253,6 +282,7 @@
     let allUsers = {};
     let messagesListener = null;
     let isInitialLoad = true;
+    let jitsiApi = null;
 
     const nameInput = document.getElementById('user-display-name');
     let myUsername = localStorage.getItem('chat_username') || '';
@@ -278,6 +308,86 @@
         name: name,
         lastActive: Date.now()
       });
+    }
+
+    // نظام الاتصال الصوتي والمرئي (Audio / Video Call Engine)
+    function startCall(isVideo) {
+      if (!myUsername) {
+        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل بدء المكالمة');
+        nameInput.focus();
+        return;
+      }
+
+      const modal = document.getElementById('call-modal');
+      const title = document.getElementById('call-modal-title');
+      const icon = document.getElementById('call-icon');
+      const container = document.getElementById('jitsi-container');
+
+      icon.innerText = isVideo ? '📹' : '📞';
+      title.innerText = isVideo ? `مكالمة فيديو مع: ${currentChatTargetName}` : `مكالمة صوتية مع: ${currentChatTargetName}`;
+
+      modal.classList.remove('hidden');
+      container.innerHTML = '';
+
+      // اسم الغرفة مشفر وفريد للختمة لضمان خصوصية تامة
+      let roomCode = '';
+      if (currentChatTarget === 'group') {
+        roomCode = 'QuranKhatmaGroupCall_2026';
+      } else {
+        const users = [myUsername, currentChatTarget].sort();
+        roomCode = 'QuranKhatmaPrivate_' + users.map(u => encodeURIComponent(u)).join('_with_');
+      }
+
+      const options = {
+        roomName: roomCode,
+        width: '100%',
+        height: '100%',
+        parentNode: container,
+        userInfo: {
+          displayName: myUsername
+        },
+        configOverwrite: {
+          startWithAudioMuted: false,
+          startWithVideoMuted: !isVideo,
+          prejoinPageEnabled: false,
+          disableDeepLinking: true
+        },
+        interfaceConfigOverwrite: {
+          TOOLBAR_BUTTONS: [
+            'microphone', 'camera', 'hangup', 'tileview', 'videoquality'
+          ]
+        }
+      };
+
+      try {
+        jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
+        jitsiApi.addEventListeners({
+          readyToClose: endCall
+        });
+
+        // إرسال تنبيه في المحادثة ببدء الاتصال
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+        db.ref(getChatRoomPath()).push({
+          sender: myUsername,
+          text: isVideo ? '📹 بدأ مكالمة فيديو مباشرة...' : '📞 بدأ مكالمة صوتية مباشرة...',
+          type: 'text',
+          time: timeStr,
+          timestamp: Date.now()
+        });
+      } catch (err) {
+        alert('حدث خطأ أثناء بدء الاتصال. يرجى التأكد من اتصال الإنترنت.');
+        endCall();
+      }
+    }
+
+    function endCall() {
+      if (jitsiApi) {
+        jitsiApi.dispose();
+        jitsiApi = null;
+      }
+      document.getElementById('call-modal').classList.add('hidden');
+      document.getElementById('jitsi-container').innerHTML = '';
     }
 
     function updateNotifyBtnUI() {
@@ -384,7 +494,6 @@
       const container = document.getElementById('chat-container');
       container.innerHTML = '<div class="text-center text-slate-400 text-xs py-4">جاري تحميل الرسائل...</div>';
 
-      // مفتاح توقيت المسح المحلي الخاص بهذا المستخدم وهذه المحادثة
       const clearKey = `chat_cleared_at_${myUsername}_${path.replace(/\//g, '_')}`;
       const clearedBefore = parseInt(localStorage.getItem(clearKey) || '0', 10);
 
@@ -401,7 +510,6 @@
 
         if (data) {
           const msgsArray = Object.values(data);
-          // فلترة: لا نظهر إلا الرسائل التي أُرسلت بعد آخر مسح محلي لهذا الهاتف
           const visibleMsgs = msgsArray.filter(m => (m.timestamp || 0) > clearedBefore);
 
           visibleMsgs.forEach(msg => {
@@ -458,15 +566,12 @@
       });
     }
 
-    // دالة المسح من هاتفي فقط (Supprimer pour moi)
     function clearChatForMeOnly() {
       const roomName = currentChatTarget === 'group' ? 'المجموعة العامة' : `محادثتك مع ${currentChatTarget}`;
       if (confirm(`هل تريد مسح رسائل "${roomName}" من هاتفك فقط؟ ستبقى الرسائل محفوظة لدى باقي المشاركين.`)) {
         const path = getChatRoomPath();
         const clearKey = `chat_cleared_at_${myUsername}_${path.replace(/\//g, '_')}`;
-        // تسجيل اللحظة الحالية في ذاكرة هذا الهاتف فقط
         localStorage.setItem(clearKey, Date.now().toString());
-        // إعادة تحميل العرض لإخفائها فوراً
         loadChatMessages();
       }
     }
