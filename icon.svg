@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#064e3b"/>
+  <!-- إطار ذهبي داخلي -->
+  <rect x="24" y="24" width="464" height="464" rx="90" fill="none" stroke="#fbbf24" stroke-width="8" opacity="0.6"/>
+  <!-- المصحف الشريف المفتوح -->
+  <g fill="#fbbf24" transform="translate(56, 76) scale(0.78)">
+    <path d="M256 368c-44-32-116-44-192-44v-240c76 0 148 12 192 44 44-32 116-44 192-44v240c-76 0-148 12-192 44z" fill="#042f2e" stroke="#fbbf24" stroke-width="16"/>
+    <!-- صفحات المصحف -->
+    <path d="M246 138c-38-26-98-36-162-36v204c64 0 124 10 162 36z" fill="#065f46" stroke="#fef08a" stroke-width="8"/>
+    <path d="M266 138c38-26 98-36 162-36v204c-64 0-124 10-162 36z" fill="#065f46" stroke="#fef08a" stroke-width="8"/>
+    <!-- خطوط الآيات الكريمة -->
+    <line x1="110" y1="160" x2="220" y2="160" stroke="#fbbf24" stroke-width="10" stroke-linecap="round"/>
+    <line x1="110" y1="200" x2="220" y2="200" stroke="#fbbf24" stroke-width="10" stroke-linecap="round"/>
+    <line x1="110" y1="240" x2="190" y2="240" stroke="#fbbf24" stroke-width="10" stroke-linecap="round"/>
+    <line x1="292" y1="160" x2="402" y2="160" stroke="#fbbf24" stroke-width="10" stroke-linecap="round"/>
+    <line x1="292" y1="200" x2="402" y2="200" stroke="#fbbf24" stroke-width="10" stroke-linecap="round"/>
+    <line x1="322" y1="240" x2="402" y2="240" stroke="#fbbf24" stroke-width="10" stroke-linecap="round"/>
+    <!-- حامل المصحف (الكرسي الخشبي) -->
+    <path d="M120 370 L256 460 L392 370 L340 340 L256 395 L172 340 Z" fill="#d97706" stroke="#fbbf24" stroke-width="8"/>
+  </g>
+</svg>
