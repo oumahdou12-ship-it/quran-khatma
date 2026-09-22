@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=15">
+  <link rel="manifest" href="manifest.json?v=17">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,8 +19,8 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
-    #chat-container::-webkit-scrollbar, #users-list-container::-webkit-scrollbar { width: 4px; }
-    #chat-container::-webkit-scrollbar-thumb, #users-list-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    #chat-container::-webkit-scrollbar, #users-list-scroll::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-thumb, #users-list-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
     .chat-bg {
       background-color: #efeae2;
       background-image: radial-gradient(#d1d7db 1px, transparent 1px);
@@ -31,10 +31,11 @@
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <!-- مكتبة الاتصال الصوتي والمرئي -->
-  <script src="https://meet.jit.si/external_api.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
+
+  <!-- صوت استقبال الاتصال -->
+  <audio id="remote-audio" autoplay playsinline></audio>
 
   <!-- شريط العنوان -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-20 border-b border-emerald-800">
@@ -114,93 +115,123 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5"></div>
   </main>
 
-  <!-- الصفحة الثانية: المحادثة والاتصال -->
+  <!-- الصفحة الثانية: نظام التواصل (قائمة عمودية + شاشة الشات) -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-125px)]">
-    <div class="bg-white border-b border-slate-200 px-3 py-2 flex flex-col gap-2 shadow-sm">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-1.5">
-          <span class="text-xs text-slate-500">حسابك:</span>
-          <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-600 focus:outline-none w-28 sm:w-32">
+
+    <!-- الواجهة 1: قائمة الأعضاء والمحادثات بشكل عمودي (Vertical User List) -->
+    <div id="chat-list-panel" class="flex-1 flex flex-col bg-white overflow-hidden">
+      <!-- شريط معلومات الحساب -->
+      <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500 font-medium">اسمك فالتطبيق:</span>
+          <input type="text" id="user-display-name" placeholder="اكتب اسمك هنا..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-800 focus:ring-2 focus:ring-emerald-600 focus:outline-none bg-white w-40">
+        </div>
+        <span class="text-[11px] text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full font-bold">المحادثات</span>
+      </div>
+
+      <!-- القائمة العمودية -->
+      <div class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1" id="users-list-scroll">
+        <!-- المحادثة العامة أولاً في القائمة -->
+        <div onclick="openChat('group', 'المجموعة العامة')" class="flex items-center justify-between p-3 rounded-2xl hover:bg-emerald-50 cursor-pointer transition border border-transparent hover:border-emerald-200">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
+              👥
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800">المجموعة العامة</h4>
+              <p class="text-xs text-slate-400">محادثة جماعية مفتوحة لجميع المشاركين</p>
+            </div>
+          </div>
+          <span class="text-emerald-700 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg">عام</span>
+        </div>
+
+        <!-- الأعضاء سيظهرون هنا عمودياً -->
+        <div id="members-vertical-list" class="space-y-1 pt-1"></div>
+      </div>
+    </div>
+
+    <!-- الواجهة 2: شاشة المحادثة المفتوحة (تفتح عند الضغط على عضو) -->
+    <div id="chat-conversation-panel" class="flex-1 flex flex-col hidden h-full">
+      <!-- رأس المحادثة -->
+      <div class="bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2">
+          <!-- زر الرجوع للقائمة العمودية -->
+          <button onclick="backToUserList()" class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition" title="رجوع لقائمة الأعضاء">
+            <svg class="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+          
+          <div class="w-9 h-9 rounded-xl bg-emerald-800 text-white flex items-center justify-center text-sm font-bold shadow-inner" id="active-chat-avatar">
+            👤
+          </div>
+          <div>
+            <h4 id="chat-target-name" class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">اسم العضو</h4>
+            <span id="chat-type-badge" class="text-[10px] text-emerald-600 font-medium">محادثة خاصة 🔒</span>
+          </div>
         </div>
 
         <div class="flex items-center gap-1.5">
-          <div id="active-chat-title" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
-            <span>👥</span> <span id="chat-target-name">المجموعة العامة</span>
-          </div>
-
-          <!-- زر مكالمة صوتية 📞 -->
-          <button onclick="startCall(false)" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة صوتية">
-            <span>📞</span>
+          <!-- زر اتصال صوتي 📞 -->
+          <button id="call-start-btn" onclick="initiateVoiceCall()" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة صوتية مباشرة">
+            <span>📞</span> <span class="hidden sm:inline">اتصال</span>
           </button>
 
-          <!-- زر مكالمة فيديو 📹 -->
-          <button onclick="startCall(true)" class="text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة فيديو">
-            <span>📹</span>
-          </button>
-
-          <!-- زر مسح المحادثة محلياً 🗑️ -->
-          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-1.5 py-1 rounded-lg text-xs font-medium transition shadow-sm" title="مسح من هاتفي فقط">
+          <!-- زر مسح عندي 🗑️ -->
+          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-2 py-1.5 rounded-xl text-xs font-medium transition shadow-sm" title="مسح من هاتفي فقط">
             <span>🗑️</span>
           </button>
         </div>
       </div>
 
-      <!-- قائمة الأعضاء -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="users-list-container">
-        <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-2.5 py-1 rounded-xl font-bold bg-emerald-800 text-white shadow-sm transition flex items-center gap-1">
-          <span>👥 الكل</span>
+      <!-- قائمة الرسائل -->
+      <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
+
+      <!-- مؤشر تسجيل الصوت للرسائل الصوتية -->
+      <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-3 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
+          <span id="recording-status-text">جاري تسجيل الصوت... انقر الميكروفون مجدداً للإرسال</span>
+        </div>
+        <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
+      </div>
+
+      <!-- شريط إدخال الرسائل والصوت والصور -->
+      <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
+        <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+        <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
+          <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 4h3l2-2h6l2 2h3a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 3a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z"/>
+          </svg>
+        </button>
+
+        <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
+        
+        <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+
+        <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+          <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
         </button>
       </div>
     </div>
-
-    <!-- قائمة الرسائل -->
-    <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
-
-    <!-- مؤشر جاري تسجيل الصوت -->
-    <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-3 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
-        <span id="recording-status-text">جاري تسجيل الصوت... انقر الميكروفون مجدداً للإرسال</span>
-      </div>
-      <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
-    </div>
-
-    <!-- شريط إدخال الرسائل والصوت والصور -->
-    <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
-      <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
-      <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
-        <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M4 4h3l2-2h6l2 2h3a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 3a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z"/>
-        </svg>
-      </button>
-
-      <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
-      
-      <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
-        <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-        </svg>
-      </button>
-
-      <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
-        <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-        </svg>
-      </button>
-    </div>
   </main>
 
-  <!-- شاشة الرنين عند استقبال مكالمة (Incoming Call Ringing Screen) -->
+  <!-- شاشة الرنين عند استقبال مكالمة صوتية -->
   <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-24 h-24 rounded-full bg-emerald-600/30 border-4 border-emerald-500 flex items-center justify-center animate-pulse mb-6">
       <span class="text-4xl animate-bounce">📞</span>
     </div>
     <h2 class="text-xl font-bold text-white mb-2" id="caller-name-display">فلان يتصل بك...</h2>
-    <p class="text-emerald-300 text-xs mb-10" id="call-type-display">مكالمة واردة مباشرة (صوتية)</p>
+    <p class="text-emerald-300 text-xs mb-10">مكالمة صوتية مباشرة واردة 📞</p>
 
     <div class="flex items-center gap-12 w-full max-w-xs justify-around">
-      <!-- زر الرفض -->
       <button onclick="declineIncomingCall()" class="flex flex-col items-center gap-2 group">
         <div class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-2xl shadow-xl transition transform group-active:scale-90">
           ✕
@@ -208,7 +239,6 @@
         <span class="text-xs text-rose-300 font-bold">رفض</span>
       </button>
 
-      <!-- زر القبول -->
       <button onclick="acceptIncomingCall()" class="flex flex-col items-center gap-2 group">
         <div class="w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-2xl shadow-xl transition transform group-active:scale-90 animate-bounce">
           📞
@@ -218,21 +248,25 @@
     </div>
   </div>
 
-  <!-- شاشة المكالمة المباشرة الجارية (Jitsi Call Interface) -->
-  <div id="call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col hidden">
-    <div class="bg-slate-900 px-4 py-3 flex justify-between items-center text-white border-b border-slate-800">
-      <div class="flex items-center gap-2">
-        <span id="call-icon" class="text-xl">📞</span>
-        <div>
-          <h3 id="call-modal-title" class="font-bold text-sm text-amber-300">مكالمة مباشرة</h3>
-          <p class="text-[10px] text-slate-400">اتصال مباشر عالي الدقة</p>
-        </div>
-      </div>
-      <button onclick="endCall()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
-        <span>إنهاء المكالمة ✕</span>
+  <!-- شاشة المكالمة الصوتية الجارية -->
+  <div id="active-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
+    <div class="w-28 h-28 rounded-full bg-emerald-900/60 border-4 border-emerald-400 flex items-center justify-center mb-5 relative">
+      <span class="text-5xl">🎙️</span>
+      <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-slate-950 animate-ping"></span>
+    </div>
+
+    <h3 id="active-call-with" class="text-lg font-bold text-white mb-1">متصل مع: ...</h3>
+    <p id="call-timer" class="text-emerald-400 text-sm font-mono mb-8">00:00</p>
+
+    <div class="flex items-center gap-6">
+      <button id="toggle-mic-call-btn" onclick="toggleMuteCall()" class="w-14 h-14 rounded-full bg-slate-800 text-white flex items-center justify-center text-xl shadow-lg border border-slate-700 transition">
+        🎤
+      </button>
+
+      <button onclick="hangupVoiceCall()" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-2xl shadow-xl transition transform active:scale-90">
+        📞
       </button>
     </div>
-    <div id="jitsi-container" class="flex-1 w-full h-full bg-slate-950"></div>
   </div>
 
   <!-- شريط التنقل السفلي -->
@@ -299,7 +333,7 @@
     const db = firebase.database();
     const khatmaRef = db.ref('khatma_ahzab');
     const usersRef = db.ref('khatma_users');
-    const callsRef = db.ref('khatma_active_calls');
+    const callsRef = db.ref('khatma_voice_calls');
 
     let currentTab = 'khatma';
     let currentChatTarget = 'group';
@@ -309,16 +343,28 @@
     let allUsers = {};
     let messagesListener = null;
     let isInitialLoad = true;
-    let jitsiApi = null;
+
+    // WebRTC
+    let localStream = null;
+    let peerConnection = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
     let ringtoneInterval = null;
-    let currentIncomingCallData = null;
+    let currentCallData = null;
+
+    const rtcConfig = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    };
 
     const nameInput = document.getElementById('user-display-name');
     let myUsername = localStorage.getItem('chat_username') || '';
     if (myUsername) {
       nameInput.value = myUsername;
       registerUser(myUsername);
-      listenForIncomingCalls(myUsername);
+      listenForIncomingVoiceCalls(myUsername);
     }
 
     nameInput.addEventListener('change', (e) => {
@@ -327,8 +373,7 @@
         myUsername = val;
         localStorage.setItem('chat_username', myUsername);
         registerUser(myUsername);
-        listenForIncomingCalls(myUsername);
-        loadChatMessages();
+        listenForIncomingVoiceCalls(myUsername);
       }
     });
 
@@ -341,8 +386,86 @@
       });
     }
 
+    // إدارة واجهة القائمة العمودية والشات
+    function openChat(target, displayName) {
+      currentChatTarget = target;
+      currentChatTargetName = displayName;
+
+      document.getElementById('chat-list-panel').classList.add('hidden');
+      document.getElementById('chat-conversation-panel').classList.remove('hidden');
+
+      document.getElementById('chat-target-name').innerText = displayName;
+      const avatar = document.getElementById('active-chat-avatar');
+      const badge = document.getElementById('chat-type-badge');
+      const callBtn = document.getElementById('call-start-btn');
+
+      if (target === 'group') {
+        avatar.innerText = '👥';
+        badge.innerText = 'محادثة عامة 🌿';
+        callBtn.classList.add('hidden');
+      } else {
+        avatar.innerText = displayName.charAt(0).toUpperCase();
+        badge.innerText = 'محادثة خاصة 🔒';
+        callBtn.classList.remove('hidden');
+      }
+
+      isInitialLoad = true;
+      loadChatMessages();
+    }
+
+    function backToUserList() {
+      document.getElementById('chat-conversation-panel').classList.add('hidden');
+      document.getElementById('chat-list-panel').classList.remove('hidden');
+      if (messagesListener) messagesListener.off();
+    }
+
+    // مزامنة وعرض قائمة الأعضاء عمودياً
+    usersRef.on('value', (snapshot) => {
+      allUsers = snapshot.val() || {};
+      renderVerticalUsersList();
+    });
+
+    function renderVerticalUsersList() {
+      const container = document.getElementById('members-vertical-list');
+      container.innerHTML = '';
+
+      const usersArray = Object.values(allUsers).filter(u => u.name && u.name !== myUsername);
+
+      if (usersArray.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">لم ينضم أي عضو آخر بعد. عند انضمام الأعضاء ستظهر أسماؤهم هنا.</div>';
+        return;
+      }
+
+      usersArray.forEach(u => {
+        const item = document.createElement('div');
+        item.onclick = () => openChat(u.name, u.name);
+        item.className = 'flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition border border-slate-100 hover:border-emerald-200 bg-white shadow-sm';
+        
+        const firstLetter = u.name.charAt(0).toUpperCase();
+
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div class="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-base shadow-sm">
+                ${firstLetter}
+              </div>
+              <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white absolute -bottom-0.5 -right-0.5"></span>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800">${u.name}</h4>
+              <p class="text-[11px] text-slate-400">انقر للتحدث المباشر والاتصال 📞</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-emerald-800 font-bold bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100">
+            <span>خاص 🔒</span>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
     // ==========================================
-    // محرك الرنين والاهتزاز للمكالمات (Ringtone Engine)
+    // الرنين والمكالمات الصوتية
     // ==========================================
     let audioCtx = null;
     function playRingtoneSound() {
@@ -354,17 +477,15 @@
         const gain = audioCtx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime); // نغمة الرنين الكلاسيكية
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
         osc.start();
-        osc.stop(audioCtx.currentTime + 1.2); // رنة لمدة 1.2 ثانية
-      } catch (e) {
-        console.log('AudioContext Ringtone error:', e);
-      }
+        osc.stop(audioCtx.currentTime + 1.2);
+      } catch (e) {}
     }
 
     function startRinging() {
@@ -374,7 +495,6 @@
         playRingtoneSound();
       }, 2500);
 
-      // اهتزاز متواصل للهاتف
       if ('vibrate' in navigator) {
         navigator.vibrate([1000, 500, 1000, 500, 1000]);
       }
@@ -390,229 +510,224 @@
       }
     }
 
-    // الاستماع للمكالمات الواردة لهذا المستخدم
-    function listenForIncomingCalls(username) {
+    function listenForIncomingVoiceCalls(username) {
       if (!username) return;
       const myCleanKey = username.replace(/[.#$\[\]]/g, '_');
 
-      callsRef.child(myCleanKey).on('value', (snapshot) => {
+      callsRef.child(myCleanKey).on('value', async (snapshot) => {
         const call = snapshot.val();
-        // إذا كان هناك اتصال جديد ولم يمضِ عليه أكثر من 45 ثانية
         if (call && call.status === 'ringing' && (Date.now() - call.timestamp) < 45000) {
-          currentIncomingCallData = call;
-          document.getElementById('caller-name-display').innerText = `${call.caller} يتصل بك الآن... 📞`;
-          document.getElementById('call-type-display').innerText = call.isVideo ? 'مكالمة فيديو واردة' : 'مكالمة صوتية واردة';
+          currentCallData = call;
+          document.getElementById('caller-name-display').innerText = `${call.caller} يتصل بك... 📞`;
           document.getElementById('incoming-call-screen').classList.remove('hidden');
           startRinging();
-
-          // إشعار نظام بالصوت إذا كان التطبيق في الخلفية
-          showSystemNotification(`مكالمة واردة من ${call.caller} 📞`, 'اضغط هنا للرد على المكالمة فوراً.');
-        } else {
+          showSystemNotification(`مكالمة واردة من ${call.caller} 📞`, 'اضغط للرد على المكالمة فوراً.');
+        } else if (call && call.status === 'ended') {
+          hangupVoiceCall();
+        } else if (!call && !peerConnection) {
           stopRinging();
           document.getElementById('incoming-call-screen').classList.add('hidden');
-          currentIncomingCallData = null;
         }
       });
     }
 
-    function acceptIncomingCall() {
+    async function initiateVoiceCall() {
+      if (!myUsername) {
+        alert('يرجى كتابة اسمك أولاً في خانة "اسمك فالتطبيق"');
+        nameInput.focus();
+        return;
+      }
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        setupPeerConnection();
+
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        const targetCleanKey = currentChatTarget.replace(/[.#$\[\]]/g, '_');
+        const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
+
+        currentCallData = {
+          caller: myUsername,
+          target: currentChatTarget,
+          sdp: JSON.stringify(offer),
+          status: 'ringing',
+          timestamp: Date.now()
+        };
+
+        await callsRef.child(targetCleanKey).set(currentCallData);
+
+        callsRef.child(myCleanKey).child('answer').on('value', async (snapshot) => {
+          const answerData = snapshot.val();
+          if (answerData && peerConnection && !peerConnection.currentRemoteDescription) {
+            const answer = new RTCSessionDescription(JSON.parse(answerData));
+            await peerConnection.setRemoteDescription(answer);
+            startCallTimer();
+          }
+        });
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            callsRef.child(targetCleanKey).child('candidates').push(JSON.stringify(event.candidate));
+          }
+        };
+
+        callsRef.child(myCleanKey).child('candidates').on('child_added', async (snapshot) => {
+          const cand = snapshot.val();
+          if (cand && peerConnection) {
+            try {
+              await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(cand)));
+            } catch(e) {}
+          }
+        });
+
+        document.getElementById('active-call-with').innerText = `جاري الاتصال بـ ${currentChatTarget}...`;
+        document.getElementById('active-call-modal').classList.remove('hidden');
+
+      } catch (err) {
+        alert('تعذر فتح الميكروفون للاتصال. يرجى إعطاء الصلاحية.');
+      }
+    }
+
+    async function acceptIncomingCall() {
       stopRinging();
       document.getElementById('incoming-call-screen').classList.add('hidden');
-      if (currentIncomingCallData) {
-        const isVideo = currentIncomingCallData.isVideo;
-        const roomCode = currentIncomingCallData.roomCode;
-        
-        // مسح حالة الاتصال من السيرفر
-        const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
-        callsRef.child(myCleanKey).remove();
 
-        launchJitsiCall(roomCode, isVideo, currentIncomingCallData.caller);
+      if (!currentCallData) return;
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        setupPeerConnection();
+
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        const offer = JSON.parse(currentCallData.sdp);
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        const callerCleanKey = currentCallData.caller.replace(/[.#$\[\]]/g, '_');
+        const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
+
+        await callsRef.child(callerCleanKey).child('answer').set(JSON.stringify(answer));
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            callsRef.child(callerCleanKey).child('candidates').push(JSON.stringify(event.candidate));
+          }
+        };
+
+        callsRef.child(myCleanKey).child('candidates').on('child_added', async (snapshot) => {
+          const cand = snapshot.val();
+          if (cand && peerConnection) {
+            try {
+              await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(cand)));
+            } catch(e) {}
+          }
+        });
+
+        document.getElementById('active-call-with').innerText = `متصل مع: ${currentCallData.caller}`;
+        document.getElementById('active-call-modal').classList.remove('hidden');
+        startCallTimer();
+
+      } catch (err) {
+        alert('تعذر استقبال المكالمة.');
+        hangupVoiceCall();
       }
     }
 
     function declineIncomingCall() {
       stopRinging();
       document.getElementById('incoming-call-screen').classList.add('hidden');
-      if (currentIncomingCallData) {
+      if (currentCallData) {
         const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
         callsRef.child(myCleanKey).remove();
-        currentIncomingCallData = null;
+        currentCallData = null;
       }
     }
 
-    // بدء اتصال لشخص آخر أو للمجموعة
-    function startCall(isVideo) {
-      if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل بدء المكالمة');
-        nameInput.focus();
-        return;
-      }
+    function setupPeerConnection() {
+      peerConnection = new RTCPeerConnection(rtcConfig);
 
-      let roomCode = '';
-      if (currentChatTarget === 'group') {
-        roomCode = 'QuranKhatmaGroupCall_2026';
-      } else {
-        const users = [myUsername, currentChatTarget].sort();
-        roomCode = 'QuranKhatmaPrivate_' + users.map(u => encodeURIComponent(u)).join('_with_');
-
-        // إرسال إشارة الرنين لهاتف الطرف الآخر
-        const targetCleanKey = currentChatTarget.replace(/[.#$\[\]]/g, '_');
-        callsRef.child(targetCleanKey).set({
-          caller: myUsername,
-          roomCode: roomCode,
-          isVideo: isVideo,
-          status: 'ringing',
-          timestamp: Date.now()
-        });
-      }
-
-      launchJitsiCall(roomCode, isVideo, currentChatTargetName);
-
-      // تنبيه في المحادثة
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
-      db.ref(getChatRoomPath()).push({
-        sender: myUsername,
-        text: isVideo ? '📹 بدأ مكالمة فيديو مباشرة...' : '📞 بدأ مكالمة صوتية مباشرة...',
-        type: 'text',
-        time: timeStr,
-        timestamp: Date.now()
-      });
-    }
-
-    function launchJitsiCall(roomCode, isVideo, targetTitle) {
-      const modal = document.getElementById('call-modal');
-      const title = document.getElementById('call-modal-title');
-      const icon = document.getElementById('call-icon');
-      const container = document.getElementById('jitsi-container');
-
-      icon.innerText = isVideo ? '📹' : '📞';
-      title.innerText = isVideo ? `مكالمة فيديو مع: ${targetTitle}` : `مكالمة صوتية مع: ${targetTitle}`;
-
-      modal.classList.remove('hidden');
-      container.innerHTML = '';
-
-      const options = {
-        roomName: roomCode,
-        width: '100%',
-        height: '100%',
-        parentNode: container,
-        userInfo: { displayName: myUsername },
-        configOverwrite: {
-          startWithAudioMuted: false,
-          startWithVideoMuted: !isVideo,
-          prejoinPageEnabled: false,
-          disableDeepLinking: true
-        },
-        interfaceConfigOverwrite: {
-          TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'tileview', 'videoquality']
+      peerConnection.ontrack = (event) => {
+        const remoteAudio = document.getElementById('remote-audio');
+        if (remoteAudio && event.streams[0]) {
+          remoteAudio.srcObject = event.streams[0];
+          remoteAudio.play().catch(e => console.log('Audio error:', e));
         }
       };
 
-      try {
-        jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
-        jitsiApi.addEventListeners({ readyToClose: endCall });
-      } catch (err) {
-        alert('حدث خطأ أثناء فتح شاشة الاتصال.');
-        endCall();
+      peerConnection.onconnectionstatechange = () => {
+        if (peerConnection.connectionState === 'connected') {
+          if (currentCallData) {
+            const partner = currentCallData.caller === myUsername ? currentCallData.target : currentCallData.caller;
+            document.getElementById('active-call-with').innerText = `متصل مع: ${partner}`;
+          }
+        } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
+          hangupVoiceCall();
+        }
+      };
+    }
+
+    function toggleMuteCall() {
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = !audioTrack.enabled;
+          const btn = document.getElementById('toggle-mic-call-btn');
+          btn.innerText = audioTrack.enabled ? '🎤' : '🔇';
+          btn.className = audioTrack.enabled ? 'w-14 h-14 rounded-full bg-slate-800 text-white flex items-center justify-center text-xl shadow-lg border border-slate-700 transition' : 'w-14 h-14 rounded-full bg-rose-800 text-white flex items-center justify-center text-xl shadow-lg border border-rose-600 transition';
+        }
       }
     }
 
-    function endCall() {
-      if (jitsiApi) {
-        jitsiApi.dispose();
-        jitsiApi = null;
-      }
-      document.getElementById('call-modal').classList.add('hidden');
-      document.getElementById('jitsi-container').innerHTML = '';
+    function startCallTimer() {
+      callSeconds = 0;
+      clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const secs = String(callSeconds % 60).padStart(2, '0');
+        document.getElementById('call-timer').innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function hangupVoiceCall() {
       stopRinging();
-    }
+      clearInterval(callTimerInterval);
+      callSeconds = 0;
+      document.getElementById('call-timer').innerText = '00:00';
 
-    function updateNotifyBtnUI() {
-      const btn = document.getElementById('notify-perm-btn');
-      if (!btn) return;
-      if (window.Notification && Notification.permission === 'granted') {
-        btn.innerHTML = '<span>🔔</span> <span>مفعلة ✓</span>';
-        btn.className = 'text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-1 rounded-xl transition flex items-center gap-1 font-medium';
-      } else {
-        btn.innerHTML = '<span>🔔</span> <span>تنبيهات</span>';
-        btn.className = 'text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 font-medium shadow-sm';
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
       }
-    }
-
-    function requestNotificationPermission() {
-      if (!('Notification' in window)) {
-        alert('المتصفح لا يدعم نظام الإشعارات.');
-        return;
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
       }
-      Notification.requestPermission().then((permission) => {
-        updateNotifyBtnUI();
-        if (permission === 'granted') {
-          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل ومكالمات الختمة على هاتفك.');
-        } else {
-          alert('يرجى السماح بالإشعارات من إعدادات المتصفح.');
-        }
-      });
-    }
 
-    updateNotifyBtnUI();
+      document.getElementById('active-call-modal').classList.add('hidden');
+      document.getElementById('incoming-call-screen').classList.add('hidden');
 
-    function showSystemNotification(title, body) {
-      if (window.Notification && Notification.permission === 'granted') {
-        if (swRegistration && 'showNotification' in swRegistration) {
-          swRegistration.showNotification(title, {
-            body: body,
-            icon: 'icon.svg',
-            badge: 'icon.svg',
-            vibrate: [500, 200, 500, 200, 1000]
-          });
-        } else {
-          new Notification(title, { body: body, icon: 'icon.svg' });
-        }
+      if (myUsername) {
+        const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
+        callsRef.child(myCleanKey).remove();
       }
+      if (currentCallData && currentCallData.target) {
+        const targetCleanKey = currentCallData.target.replace(/[.#$\[\]]/g, '_');
+        callsRef.child(targetCleanKey).remove();
+      }
+      currentCallData = null;
     }
 
-    usersRef.on('value', (snapshot) => {
-      allUsers = snapshot.val() || {};
-      renderUsersList();
-    });
-
-    function renderUsersList() {
-      const container = document.getElementById('users-list-container');
-      container.innerHTML = `
-        <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${
-          currentChatTarget === 'group' ? 'bg-emerald-800 text-white shadow' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-        }">
-          <span>👥 الكل (عام)</span>
-        </button>
-      `;
-
-      Object.values(allUsers).forEach(u => {
-        if (!u.name || u.name === myUsername) return;
-        const btn = document.createElement('button');
-        const isActive = currentChatTarget === u.name;
-        btn.onclick = () => selectChatTarget(u.name, u.name);
-        btn.className = `shrink-0 text-[11px] px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
-          isActive ? 'bg-emerald-800 text-white shadow' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-        }`;
-        btn.innerHTML = `
-          <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-          <span>👤 ${u.name}</span>
-          <span class="text-[9px] text-amber-500 font-normal">خاص 🔒</span>
-        `;
-        container.appendChild(btn);
-      });
-    }
-
-    function selectChatTarget(target, displayName) {
-      currentChatTarget = target;
-      currentChatTargetName = displayName;
-      document.getElementById('chat-target-name').innerText = displayName;
-      renderUsersList();
-      isInitialLoad = true;
-      loadChatMessages();
-    }
-
+    // ==========================================
+    // رسائل المحادثة (نصوص / صوتيات / صور)
+    // ==========================================
     function getChatRoomPath() {
       if (currentChatTarget === 'group') {
         return 'khatma_messages/group';
@@ -638,13 +753,6 @@
       messagesListener.on('value', (snapshot) => {
         container.innerHTML = '';
         const data = snapshot.val();
-
-        const headerNote = document.createElement('div');
-        headerNote.className = 'text-center my-2';
-        headerNote.innerHTML = currentChatTarget === 'group'
-          ? `<span class="bg-emerald-100 text-emerald-800 text-[11px] px-3 py-1 rounded-full shadow-sm">🌿 المحادثة العامة لجميع المشاركين</span>`
-          : `<span class="bg-amber-100 text-amber-900 text-[11px] px-3 py-1 rounded-full shadow-sm">🔒 محادثة خاصة وسرية بينك وبين ${currentChatTarget}</span>`;
-        container.appendChild(headerNote);
 
         if (data) {
           const msgsArray = Object.values(data);
@@ -725,7 +833,7 @@
       const textInp = document.getElementById('message-text');
       const text = textInp.value.trim();
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك"');
+        alert('يرجى كتابة اسمك أولاً في خانة "اسمك فالتطبيق"');
         nameInput.focus();
         return;
       }
@@ -750,7 +858,7 @@
       if (!file) return;
 
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل إرسال الصورة');
+        alert('يرجى كتابة اسمك أولاً في خانة "اسمك فالتطبيق" قبل إرسال الصورة');
         nameInput.focus();
         event.target.value = '';
         return;
@@ -803,7 +911,7 @@
 
     async function toggleAudioRecording() {
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل التسجيل الصوتي');
+        alert('يرجى كتابة اسمك أولاً في خانة "اسمك فالتطبيق" قبل التسجيل الصوتي');
         nameInput.focus();
         return;
       }
@@ -864,6 +972,53 @@
       }
     }
 
+    // ==========================================
+    // التنبيهات والأحزاب والـ PWA
+    // ==========================================
+    function updateNotifyBtnUI() {
+      const btn = document.getElementById('notify-perm-btn');
+      if (!btn) return;
+      if (window.Notification && Notification.permission === 'granted') {
+        btn.innerHTML = '<span>🔔</span> <span>مفعلة ✓</span>';
+        btn.className = 'text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-1 rounded-xl transition flex items-center gap-1 font-medium';
+      } else {
+        btn.innerHTML = '<span>🔔</span> <span>تنبيهات</span>';
+        btn.className = 'text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 font-medium shadow-sm';
+      }
+    }
+
+    function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        alert('المتصفح لا يدعم نظام الإشعارات.');
+        return;
+      }
+      Notification.requestPermission().then((permission) => {
+        updateNotifyBtnUI();
+        if (permission === 'granted') {
+          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل ومكالمات الختمة على هاتفك.');
+        } else {
+          alert('يرجى السماح بالإشعارات من إعدادات المتصفح.');
+        }
+      });
+    }
+
+    updateNotifyBtnUI();
+
+    function showSystemNotification(title, body) {
+      if (window.Notification && Notification.permission === 'granted') {
+        if (swRegistration && 'showNotification' in swRegistration) {
+          swRegistration.showNotification(title, {
+            body: body,
+            icon: 'icon.svg',
+            badge: 'icon.svg',
+            vibrate: [500, 200, 500, 200, 1000]
+          });
+        } else {
+          new Notification(title, { body: body, icon: 'icon.svg' });
+        }
+      }
+    }
+
     function switchTab(tab) {
       currentTab = tab;
       const khatmaView = document.getElementById('khatma-view');
@@ -887,8 +1042,7 @@
         tabChatBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition relative';
         resetBtn.classList.add('hidden');
         subTitle.innerText = 'المحادثة العامة والخاصة بين الأعضاء';
-        isInitialLoad = true;
-        loadChatMessages();
+        backToUserList();
       }
     }
 
@@ -1018,7 +1172,7 @@
       localStorage.setItem('chat_username', name);
       nameInput.value = name;
       registerUser(name);
-      listenForIncomingCalls(name);
+      listenForIncomingVoiceCalls(name);
 
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
