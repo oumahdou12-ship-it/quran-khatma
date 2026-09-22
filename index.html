@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=16">
+  <link rel="manifest" href="manifest.json?v=19">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,12 +19,26 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
-    #chat-container::-webkit-scrollbar, #users-list-container::-webkit-scrollbar { width: 4px; }
-    #chat-container::-webkit-scrollbar-thumb, #users-list-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    #chat-container::-webkit-scrollbar, #users-list-scroll::-webkit-scrollbar, #quran-reader-body::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-thumb, #users-list-scroll::-webkit-scrollbar-thumb, #quran-reader-body::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
     .chat-bg {
       background-color: #efeae2;
       background-image: radial-gradient(#d1d7db 1px, transparent 1px);
       background-size: 16px 16px;
+    }
+    .ayah-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid #d97706;
+      color: #b45309;
+      font-size: 11px;
+      font-family: 'Tajawal', sans-serif;
+      margin: 0 4px;
+      background-color: #fffbeb;
     }
   </style>
 
@@ -34,8 +48,29 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
 
-  <!-- عنصر صوتي خفي لاستقبال صوت الطرف الآخر -->
   <audio id="remote-audio" autoplay playsinline></audio>
+
+  <!-- شاشة التسجيل الإلزامية للعضو الجديد -->
+  <div id="registration-overlay" class="fixed inset-0 bg-emerald-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm text-center shadow-2xl border border-emerald-100">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-200">
+        📖
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 mb-1 quran-font">مرحباً بك في الختمة</h2>
+      <p class="text-xs text-slate-500 mb-6">يرجى تسجيل اسمك الكامل للانضمام للمجموعة ومتابعة أحزابك والتواصل مع الإخوة.</p>
+
+      <form onsubmit="handleRegistration(event)" class="space-y-4 text-right">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">الاسم والنسب (الاسم الكامل):</label>
+          <input type="text" id="reg-fullname" placeholder="مثال: محمد العلوي" required class="w-full border border-slate-300 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none bg-slate-50">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3 rounded-2xl transition shadow-lg text-sm">
+          تأكيد التسجيل والدخول 🌿
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- شريط العنوان -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-20 border-b border-emerald-800">
@@ -66,7 +101,7 @@
     </div>
   </header>
 
-  <!-- الصفحة الأولى: شبكة الختمة والأحزاب -->
+  <!-- الصفحة الأولى: شبكة الأحزاب -->
   <main id="khatma-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1">
     <div id="install-banner" class="hidden mb-3 bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-3 rounded-2xl shadow-lg border border-emerald-700/50 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -111,81 +146,139 @@
       </div>
     </div>
 
-    <!-- شبكة الأحزاب -->
+    <!-- شبكة الـ 60 حزب -->
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5"></div>
   </main>
 
-  <!-- الصفحة الثانية: المحادثة والاتصال -->
+  <!-- الصفحة الثانية: التواصل والشات -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-125px)]">
-    <div class="bg-white border-b border-slate-200 px-3 py-2 flex flex-col gap-2 shadow-sm">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-1.5">
-          <span class="text-xs text-slate-500">حسابك:</span>
-          <input type="text" id="user-display-name" placeholder="اسمك الكريم..." class="border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-600 focus:outline-none w-28 sm:w-32">
+    <!-- قائمة الأعضاء عمودياً -->
+    <div id="chat-list-panel" class="flex-1 flex flex-col bg-white overflow-hidden">
+      <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500 font-medium">حسابك:</span>
+          <span id="my-profile-name" class="text-xs font-bold text-emerald-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200">...</span>
+        </div>
+        <button onclick="changeProfileName()" class="text-[11px] text-slate-500 hover:text-emerald-700 underline">تعديل الاسم</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1" id="users-list-scroll">
+        <div onclick="openChat('group', 'المجموعة العامة')" class="flex items-center justify-between p-3 rounded-2xl hover:bg-emerald-50 cursor-pointer transition border border-transparent hover:border-emerald-200">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
+              👥
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800">المجموعة العامة</h4>
+              <p class="text-xs text-slate-400">محادثة جماعية مفتوحة لجميع المشاركين</p>
+            </div>
+          </div>
+          <span class="text-emerald-700 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg">عام</span>
+        </div>
+
+        <div id="members-vertical-list" class="space-y-1 pt-1"></div>
+      </div>
+    </div>
+
+    <!-- شاشة المحادثة المفتوحة -->
+    <div id="chat-conversation-panel" class="flex-1 flex flex-col hidden h-full">
+      <div class="bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2">
+          <button onclick="backToUserList()" class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition" title="رجوع">
+            <svg class="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+          
+          <div class="w-9 h-9 rounded-xl bg-emerald-800 text-white flex items-center justify-center text-sm font-bold shadow-inner" id="active-chat-avatar">
+            👤
+          </div>
+          <div>
+            <h4 id="chat-target-name" class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">اسم العضو</h4>
+            <span id="chat-type-badge" class="text-[10px] text-emerald-600 font-medium">محادثة خاصة 🔒</span>
+          </div>
         </div>
 
         <div class="flex items-center gap-1.5">
-          <div id="active-chat-title" class="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
-            <span>👥</span> <span id="chat-target-name">المجموعة العامة</span>
-          </div>
-
-          <!-- زر اتصال صوتي فقط 📞 (يظهر فقط في المحادثة الخاصة) -->
-          <button id="call-start-btn" onclick="initiateVoiceCall()" class="hidden text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة صوتية مباشرة">
-            <span>📞</span> <span>اتصال</span>
+          <button id="call-start-btn" onclick="initiateVoiceCall()" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة صوتية">
+            <span>📞</span> <span class="hidden sm:inline">اتصال</span>
           </button>
 
-          <!-- زر مسح المحادثة محلياً 🗑️ -->
-          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-1.5 py-1 rounded-lg text-xs font-medium transition shadow-sm" title="مسح من هاتفي فقط">
+          <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-2 py-1.5 rounded-xl text-xs font-medium transition shadow-sm" title="مسح من هاتفي فقط">
             <span>🗑️</span>
           </button>
         </div>
       </div>
 
-      <!-- قائمة الأعضاء -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="users-list-container">
-        <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-2.5 py-1 rounded-xl font-bold bg-emerald-800 text-white shadow-sm transition flex items-center gap-1">
-          <span>👥 الكل</span>
+      <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
+
+      <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-3 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
+          <span id="recording-status-text">جاري تسجيل الصوت... انقر الميكروفون مجدداً للإرسال</span>
+        </div>
+        <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
+      </div>
+
+      <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
+        <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+        <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
+          <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 4h3l2-2h6l2 2h3a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 3a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z"/>
+          </svg>
+        </button>
+
+        <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
+        
+        <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+
+        <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
+          <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
         </button>
       </div>
     </div>
-
-    <!-- قائمة الرسائل -->
-    <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
-
-    <!-- مؤشر جاري تسجيل الصوت للرسائل الصوتية -->
-    <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-3 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
-        <span id="recording-status-text">جاري تسجيل الصوت... انقر الميكروفون مجدداً للإرسال</span>
-      </div>
-      <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
-    </div>
-
-    <!-- شريط إدخال الرسائل والصوت والصور -->
-    <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
-      <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
-      <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
-        <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M4 4h3l2-2h6l2 2h3a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 3a5 5 0 100 10 5 5 0 000-10zm0 2a3 3 0 110 6 3 3 0 010-6z"/>
-        </svg>
-      </button>
-
-      <input type="text" id="message-text" placeholder="اكتب رسالة..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white" onkeydown="if(event.key==='Enter') sendTextMessage()">
-      
-      <button onclick="sendTextMessage()" class="bg-emerald-700 hover:bg-emerald-800 text-white p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
-        <svg class="w-4 h-4 transform rotate-180" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-        </svg>
-      </button>
-
-      <button id="mic-btn" onclick="toggleAudioRecording()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2.5 rounded-xl transition shadow flex items-center justify-center shrink-0">
-        <svg id="mic-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-        </svg>
-      </button>
-    </div>
   </main>
+
+  <!-- الصفحة الثالثة: قارئ القرآن الكريم المباشر داخل التطبيق (يعمل بدون إنترنت) -->
+  <div id="quran-reader-modal" class="fixed inset-0 bg-amber-50/95 z-50 flex flex-col hidden">
+    <!-- شريط القارئ العلوي -->
+    <div class="bg-emerald-950 text-white px-4 py-3 flex justify-between items-center shadow-md border-b border-emerald-800">
+      <div class="flex items-center gap-2">
+        <button onclick="closeQuranReader()" class="p-1 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-amber-300 text-xs px-2.5 py-1.5 transition flex items-center gap-1 font-bold">
+          <span>✕</span> <span>إغلاق القارئ</span>
+        </button>
+        <h3 id="quran-reader-title" class="font-bold text-sm text-amber-300 quran-font">الحزب ...</h3>
+      </div>
+      
+      <!-- تحكم بحجم الخط -->
+      <div class="flex items-center gap-2 bg-emerald-900 px-2 py-1 rounded-xl border border-emerald-800">
+        <button onclick="adjustFontSize(2)" class="text-amber-300 font-bold text-sm px-1.5">A+</button>
+        <span class="text-[10px] text-emerald-200">الخط</span>
+        <button onclick="adjustFontSize(-2)" class="text-amber-300 font-bold text-xs px-1.5">A-</button>
+      </div>
+    </div>
+
+    <!-- نص الحزب القرآني -->
+    <div id="quran-reader-body" class="flex-1 overflow-y-auto p-4 sm:p-8 max-w-3xl mx-auto w-full text-slate-900 leading-[2.6] text-right font-medium selection:bg-amber-200">
+      <div id="quran-reader-content" class="quran-font text-xl transition-all duration-200">
+        <!-- تظهر آيات الحزب هنا -->
+      </div>
+    </div>
+
+    <!-- شريط إنهاء وقراءة الحزب السفلي -->
+    <div class="bg-white border-t border-slate-200 p-3 flex justify-between items-center max-w-3xl mx-auto w-full shadow-lg">
+      <button onclick="completeHizbFromReader()" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition shadow flex items-center justify-center gap-2 text-xs sm:text-sm">
+        <span>✓</span> <span>أتممت قراءة هذا الحزب بحمد الله</span>
+      </button>
+    </div>
+  </div>
 
   <!-- شاشة الرنين عند استقبال مكالمة صوتية -->
   <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
@@ -212,7 +305,7 @@
     </div>
   </div>
 
-  <!-- شاشة المكالمة الصوتية الجارية (Voice Call In Progress) -->
+  <!-- شاشة المكالمة الصوتية الجارية -->
   <div id="active-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-28 h-28 rounded-full bg-emerald-900/60 border-4 border-emerald-400 flex items-center justify-center mb-5 relative">
       <span class="text-5xl">🎙️</span>
@@ -223,12 +316,10 @@
     <p id="call-timer" class="text-emerald-400 text-sm font-mono mb-8">00:00</p>
 
     <div class="flex items-center gap-6">
-      <!-- كتم المايك -->
       <button id="toggle-mic-call-btn" onclick="toggleMuteCall()" class="w-14 h-14 rounded-full bg-slate-800 text-white flex items-center justify-center text-xl shadow-lg border border-slate-700 transition">
         🎤
       </button>
 
-      <!-- قطع المكالمة -->
       <button onclick="hangupVoiceCall()" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-2xl shadow-xl transition transform active:scale-90">
         📞
       </button>
@@ -253,33 +344,30 @@
     <img id="enlarged-image" src="" alt="صورة مكبرة" class="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl">
   </div>
 
-  <!-- تفاصيل الحزب -->
+  <!-- نافذة تفاصيل الحزب المنبثقة -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
         <h3 id="modal-title" class="text-lg font-bold text-slate-800">تفاصيل الحزب</h3>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
       </div>
 
       <div class="mt-4 space-y-4">
-        <div id="modal-status-box" class="p-3 rounded-xl text-sm font-medium"></div>
+        <div id="modal-status-box" class="p-3 rounded-2xl text-sm font-medium"></div>
 
-        <div id="name-input-group">
-          <label class="block text-xs font-semibold text-slate-600 mb-1">اسم القارئ:</label>
-          <input type="text" id="reader-name-input" placeholder="اكتب اسمك هنا..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-
-        <div class="bg-emerald-50 border border-emerald-100 p-3.5 rounded-xl flex justify-between items-center">
-          <div>
-            <span class="text-xs text-emerald-900 font-bold block">قراءة الحزب مباشرة:</span>
-            <span id="hizb-indicator" class="text-[11px] text-emerald-700"></span>
+        <!-- زر القراءة الداخلي المباشر بدون إنترنت -->
+        <div class="bg-emerald-50 border border-emerald-200/80 p-4 rounded-2xl flex flex-col gap-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-emerald-950 font-bold block">📖 قراءة الحزب داخل التطبيق:</span>
+            <span class="text-[10px] bg-emerald-200/70 text-emerald-900 font-bold px-2 py-0.5 rounded-full">يعمل بدون إنترنت</span>
           </div>
-          <a id="read-online-link" href="#" target="_blank" class="text-xs bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl transition font-bold inline-block shadow">
-            فتح في المصحف ↗
-          </a>
+          <p id="hizb-indicator" class="text-[11px] text-emerald-800 leading-relaxed"></p>
+          <button onclick="openQuranReader(selectedHizbId)" class="w-full mt-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center gap-1.5">
+            <span>📖 فتح وقراءة آيات الحزب الآن ↗</span>
+          </button>
         </div>
 
-        <div id="modal-actions" class="flex gap-2 pt-2"></div>
+        <div id="modal-actions" class="flex gap-2 pt-1"></div>
       </div>
     </div>
   </div>
@@ -309,8 +397,9 @@
     let allUsers = {};
     let messagesListener = null;
     let isInitialLoad = true;
+    let currentReaderFontSize = 22;
 
-    // محرك WebRTC الصوتي الصافي
+    // WebRTC
     let localStream = null;
     let peerConnection = null;
     let callTimerInterval = null;
@@ -325,36 +414,225 @@
       ]
     };
 
-    const nameInput = document.getElementById('user-display-name');
     let myUsername = localStorage.getItem('chat_username') || '';
-    if (myUsername) {
-      nameInput.value = myUsername;
-      registerUser(myUsername);
-      listenForIncomingVoiceCalls(myUsername);
-    }
 
-    nameInput.addEventListener('change', (e) => {
-      const val = e.target.value.trim();
-      if (val) {
-        myUsername = val;
-        localStorage.setItem('chat_username', myUsername);
+    function checkUserRegistration() {
+      if (!myUsername) {
+        document.getElementById('registration-overlay').classList.remove('hidden');
+      } else {
+        document.getElementById('registration-overlay').classList.add('hidden');
+        document.getElementById('my-profile-name').innerText = myUsername;
         registerUser(myUsername);
         listenForIncomingVoiceCalls(myUsername);
-        loadChatMessages();
       }
-    });
+    }
+
+    function handleRegistration(e) {
+      e.preventDefault();
+      const input = document.getElementById('reg-fullname');
+      const name = input.value.trim();
+      if (!name) return;
+
+      myUsername = name;
+      localStorage.setItem('chat_username', myUsername);
+      checkUserRegistration();
+    }
+
+    function changeProfileName() {
+      const newName = prompt('أدخل اسمك الكامل الجديد:', myUsername);
+      if (newName && newName.trim()) {
+        myUsername = newName.trim();
+        localStorage.setItem('chat_username', myUsername);
+        checkUserRegistration();
+        renderVerticalUsersList();
+      }
+    }
 
     function registerUser(name) {
       if (!name) return;
       const cleanKey = name.replace(/[.#$\[\]]/g, '_');
       usersRef.child(cleanKey).set({
         name: name,
+        joinedAt: Date.now(),
         lastActive: Date.now()
       });
     }
 
     // ==========================================
-    // رنين واهتزاز الهاتف عند المكالمة
+    // محرك قارئ القرآن الكريم المباشر أوفلاين (Quran Offline Engine)
+    // ==========================================
+    async function openQuranReader(hizbId) {
+      closeModal();
+      selectedHizbId = hizbId;
+
+      const modal = document.getElementById('quran-reader-modal');
+      const title = document.getElementById('quran-reader-title');
+      const content = document.getElementById('quran-reader-content');
+
+      const startThumn = ((hizbId - 1) * 8) + 1;
+      const endThumn = hizbId * 8;
+      title.innerText = `الحزب رقم ${hizbId} (الأثمان ${startThumn} - ${endThumn})`;
+
+      modal.classList.remove('hidden');
+      content.innerHTML = '<div class="text-center text-slate-500 text-sm py-12">جاري فتح وتجهيز آيات الحزب... 🌿</div>';
+
+      // 1. التحقق أولاً إذا كان الحزب مخزناً مسبقاً في الهاتف
+      const localCacheKey = `quran_hizb_offline_${hizbId}`;
+      const cachedData = localStorage.getItem(localCacheKey);
+
+      if (cachedData) {
+        renderHizbVerses(JSON.parse(cachedData));
+        return;
+      }
+
+      // 2. إذا لم يكن مخزناً، يتم تحميله وتخزينه فوراً للأبد في الهاتف
+      try {
+        const response = await fetch(`https://api.alquran.cloud/v1/hizb/${hizbId}/quran-uthmani`);
+        const result = await response.json();
+
+        if (result && result.data && result.data.ayahs) {
+          localStorage.setItem(localCacheKey, JSON.stringify(result.data.ayahs));
+          renderHizbVerses(result.data.ayahs);
+        } else {
+          throw new Error('خطأ في استرجاع الآيات');
+        }
+      } catch (err) {
+        content.innerHTML = `
+          <div class="text-center py-10 space-y-3">
+            <p class="text-rose-700 font-bold text-sm">أنت في وضع عدم الاتصال بالإنترنت لأول مرة لهذا الحزب.</p>
+            <p class="text-xs text-slate-600">يرجى فتح الحزب مرة واحدة فقط أثناء وجود الإنترنت ليتم حفظه تلقائياً في هاتفك للأبد.</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderHizbVerses(ayahs) {
+      const content = document.getElementById('quran-reader-content');
+      let html = '';
+      let currentSurah = '';
+
+      ayahs.forEach(ayah => {
+        if (ayah.surah && ayah.surah.name !== currentSurah) {
+          currentSurah = ayah.surah.name;
+          html += `
+            <div class="my-6 text-center">
+              <div class="inline-block bg-emerald-900 text-amber-300 font-bold px-6 py-2 rounded-2xl shadow-sm text-lg border border-amber-400/40">
+                سورة ${currentSurah}
+              </div>
+              ${ayah.surah.number !== 1 && ayah.surah.number !== 9 && ayah.numberInSurah === 1 ? '<div class="text-center text-emerald-800 text-lg my-3 font-bold">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>' : ''}
+            </div>
+          `;
+        }
+
+        let ayahText = ayah.text;
+        // إزالة البسملة المكررة في بداية السور إن وجدت داخل النص
+        if (ayah.numberInSurah === 1 && ayah.surah.number !== 1 && ayahText.startsWith('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ')) {
+          ayahText = ayahText.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', '').trim();
+        }
+
+        html += `<span>${ayahText}</span> <span class="ayah-badge">${ayah.numberInSurah}</span> `;
+      });
+
+      content.innerHTML = html;
+      document.getElementById('quran-reader-body').scrollTop = 0;
+    }
+
+    function adjustFontSize(delta) {
+      currentReaderFontSize = Math.min(36, Math.max(16, currentReaderFontSize + delta));
+      document.getElementById('quran-reader-content').style.fontSize = `${currentReaderFontSize}px`;
+    }
+
+    function closeQuranReader() {
+      document.getElementById('quran-reader-modal').classList.add('hidden');
+    }
+
+    function completeHizbFromReader() {
+      if (selectedHizbId) {
+        completeHizb();
+        closeQuranReader();
+        alert('هنيئاً لك إتمام قراءة الحزب! تقبل الله طاعتكم 🌿');
+      }
+    }
+
+    // إدارة شاشات الشات والأعضاء
+    function openChat(target, displayName) {
+      currentChatTarget = target;
+      currentChatTargetName = displayName;
+
+      document.getElementById('chat-list-panel').classList.add('hidden');
+      document.getElementById('chat-conversation-panel').classList.remove('hidden');
+
+      document.getElementById('chat-target-name').innerText = displayName;
+      const avatar = document.getElementById('active-chat-avatar');
+      const badge = document.getElementById('chat-type-badge');
+      const callBtn = document.getElementById('call-start-btn');
+
+      if (target === 'group') {
+        avatar.innerText = '👥';
+        badge.innerText = 'محادثة عامة 🌿';
+        callBtn.classList.add('hidden');
+      } else {
+        avatar.innerText = displayName.charAt(0).toUpperCase();
+        badge.innerText = 'محادثة خاصة 🔒';
+        callBtn.classList.remove('hidden');
+      }
+
+      isInitialLoad = true;
+      loadChatMessages();
+    }
+
+    function backToUserList() {
+      document.getElementById('chat-conversation-panel').classList.add('hidden');
+      document.getElementById('chat-list-panel').classList.remove('hidden');
+      if (messagesListener) messagesListener.off();
+    }
+
+    usersRef.on('value', (snapshot) => {
+      allUsers = snapshot.val() || {};
+      renderVerticalUsersList();
+    });
+
+    function renderVerticalUsersList() {
+      const container = document.getElementById('members-vertical-list');
+      container.innerHTML = '';
+
+      const usersArray = Object.values(allUsers).filter(u => u.name && u.name !== myUsername);
+
+      if (usersArray.length === 0) {
+        container.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">لم ينضم أي عضو آخر بعد. عند تسجيل الأعضاء ستظهر أسماؤهم هنا.</div>';
+        return;
+      }
+
+      usersArray.forEach(u => {
+        const item = document.createElement('div');
+        item.onclick = () => openChat(u.name, u.name);
+        item.className = 'flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition border border-slate-100 hover:border-emerald-200 bg-white shadow-sm';
+        
+        const firstLetter = u.name.charAt(0).toUpperCase();
+
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div class="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-base shadow-sm">
+                ${firstLetter}
+              </div>
+              <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white absolute -bottom-0.5 -right-0.5"></span>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800">${u.name}</h4>
+              <p class="text-[11px] text-slate-400">عضو مسجل • انقر للتحدث 📞</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-emerald-800 font-bold bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100">
+            <span>خاص 🔒</span>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // ==========================================
+    // نظام الرنين والمكالمات
     // ==========================================
     let audioCtx = null;
     function playRingtoneSound() {
@@ -399,9 +677,6 @@
       }
     }
 
-    // ==========================================
-    // محرك المكالمات الصوتية (WebRTC Audio Engine)
-    // ==========================================
     function listenForIncomingVoiceCalls(username) {
       if (!username) return;
       const myCleanKey = username.replace(/[.#$\[\]]/g, '_');
@@ -425,12 +700,7 @@
 
     async function initiateVoiceCall() {
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل بدء المكالمة');
-        nameInput.focus();
-        return;
-      }
-      if (currentChatTarget === 'group') {
-        alert('المكالمات الصوتية المباشرة مخصصة للمحادثات الخاصة مع الأعضاء.');
+        checkUserRegistration();
         return;
       }
 
@@ -456,7 +726,6 @@
 
         await callsRef.child(targetCleanKey).set(currentCallData);
 
-        // مراقبة قبول المكالمة من الطرف الآخر
         callsRef.child(myCleanKey).child('answer').on('value', async (snapshot) => {
           const answerData = snapshot.val();
           if (answerData && peerConnection && !peerConnection.currentRemoteDescription) {
@@ -466,7 +735,6 @@
           }
         });
 
-        // إرسال وتبادل ICE candidates
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
             callsRef.child(targetCleanKey).child('candidates').push(JSON.stringify(event.candidate));
@@ -482,12 +750,11 @@
           }
         });
 
-        // فتح واجهة المكالمة
         document.getElementById('active-call-with').innerText = `جاري الاتصال بـ ${currentChatTarget}...`;
         document.getElementById('active-call-modal').classList.remove('hidden');
 
       } catch (err) {
-        alert('تعذر فتح الميكروفون للاتصال. تأكد من إعطاء الصلاحية.');
+        alert('تعذر فتح الميكروفون للاتصال. يرجى إعطاء الصلاحية.');
       }
     }
 
@@ -512,7 +779,6 @@
         const callerCleanKey = currentCallData.caller.replace(/[.#$\[\]]/g, '_');
         const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
 
-        // إرسال الرد
         await callsRef.child(callerCleanKey).child('answer').set(JSON.stringify(answer));
 
         peerConnection.onicecandidate = (event) => {
@@ -535,7 +801,7 @@
         startCallTimer();
 
       } catch (err) {
-        alert('تعذر بدء استقبال المكالمة.');
+        alert('تعذر استقبال المكالمة.');
         hangupVoiceCall();
       }
     }
@@ -557,7 +823,7 @@
         const remoteAudio = document.getElementById('remote-audio');
         if (remoteAudio && event.streams[0]) {
           remoteAudio.srcObject = event.streams[0];
-          remoteAudio.play().catch(e => console.log('Audio autoplay:', e));
+          remoteAudio.play().catch(e => console.log('Audio error:', e));
         }
       };
 
@@ -614,7 +880,6 @@
       document.getElementById('active-call-modal').classList.add('hidden');
       document.getElementById('incoming-call-screen').classList.add('hidden');
 
-      // تنظيف بيانات المكالمة في Firebase
       if (myUsername) {
         const myCleanKey = myUsername.replace(/[.#$\[\]]/g, '_');
         callsRef.child(myCleanKey).remove();
@@ -627,103 +892,8 @@
     }
 
     // ==========================================
-    // نظام الإشعارات
+    // رسائل الشات
     // ==========================================
-    function updateNotifyBtnUI() {
-      const btn = document.getElementById('notify-perm-btn');
-      if (!btn) return;
-      if (window.Notification && Notification.permission === 'granted') {
-        btn.innerHTML = '<span>🔔</span> <span>مفعلة ✓</span>';
-        btn.className = 'text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-1 rounded-xl transition flex items-center gap-1 font-medium';
-      } else {
-        btn.innerHTML = '<span>🔔</span> <span>تنبيهات</span>';
-        btn.className = 'text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 font-medium shadow-sm';
-      }
-    }
-
-    function requestNotificationPermission() {
-      if (!('Notification' in window)) {
-        alert('المتصفح لا يدعم نظام الإشعارات.');
-        return;
-      }
-      Notification.requestPermission().then((permission) => {
-        updateNotifyBtnUI();
-        if (permission === 'granted') {
-          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل ومكالمات الختمة على هاتفك.');
-        } else {
-          alert('يرجى السماح بالإشعارات من إعدادات المتصفح.');
-        }
-      });
-    }
-
-    updateNotifyBtnUI();
-
-    function showSystemNotification(title, body) {
-      if (window.Notification && Notification.permission === 'granted') {
-        if (swRegistration && 'showNotification' in swRegistration) {
-          swRegistration.showNotification(title, {
-            body: body,
-            icon: 'icon.svg',
-            badge: 'icon.svg',
-            vibrate: [500, 200, 500, 200, 1000]
-          });
-        } else {
-          new Notification(title, { body: body, icon: 'icon.svg' });
-        }
-      }
-    }
-
-    // مزامنة الأعضاء
-    usersRef.on('value', (snapshot) => {
-      allUsers = snapshot.val() || {};
-      renderUsersList();
-    });
-
-    function renderUsersList() {
-      const container = document.getElementById('users-list-container');
-      container.innerHTML = `
-        <button onclick="selectChatTarget('group', 'المجموعة العامة')" id="target-group-btn" class="shrink-0 text-[11px] px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${
-          currentChatTarget === 'group' ? 'bg-emerald-800 text-white shadow' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-        }">
-          <span>👥 الكل (عام)</span>
-        </button>
-      `;
-
-      Object.values(allUsers).forEach(u => {
-        if (!u.name || u.name === myUsername) return;
-        const btn = document.createElement('button');
-        const isActive = currentChatTarget === u.name;
-        btn.onclick = () => selectChatTarget(u.name, u.name);
-        btn.className = `shrink-0 text-[11px] px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
-          isActive ? 'bg-emerald-800 text-white shadow' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-        }`;
-        btn.innerHTML = `
-          <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-          <span>👤 ${u.name}</span>
-          <span class="text-[9px] text-amber-500 font-normal">خاص 🔒</span>
-        `;
-        container.appendChild(btn);
-      });
-    }
-
-    function selectChatTarget(target, displayName) {
-      currentChatTarget = target;
-      currentChatTargetName = displayName;
-      document.getElementById('chat-target-name').innerText = displayName;
-
-      // زر الاتصال الصوتي يظهر فقط في المحادثات الخاصة مع شخص محدد
-      const callBtn = document.getElementById('call-start-btn');
-      if (target === 'group') {
-        callBtn.classList.add('hidden');
-      } else {
-        callBtn.classList.remove('hidden');
-      }
-
-      renderUsersList();
-      isInitialLoad = true;
-      loadChatMessages();
-    }
-
     function getChatRoomPath() {
       if (currentChatTarget === 'group') {
         return 'khatma_messages/group';
@@ -749,13 +919,6 @@
       messagesListener.on('value', (snapshot) => {
         container.innerHTML = '';
         const data = snapshot.val();
-
-        const headerNote = document.createElement('div');
-        headerNote.className = 'text-center my-2';
-        headerNote.innerHTML = currentChatTarget === 'group'
-          ? `<span class="bg-emerald-100 text-emerald-800 text-[11px] px-3 py-1 rounded-full shadow-sm">🌿 المحادثة العامة لجميع المشاركين</span>`
-          : `<span class="bg-amber-100 text-amber-900 text-[11px] px-3 py-1 rounded-full shadow-sm">🔒 محادثة خاصة وسرية بينك وبين ${currentChatTarget}</span>`;
-        container.appendChild(headerNote);
 
         if (data) {
           const msgsArray = Object.values(data);
@@ -836,8 +999,7 @@
       const textInp = document.getElementById('message-text');
       const text = textInp.value.trim();
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك"');
-        nameInput.focus();
+        checkUserRegistration();
         return;
       }
       if (!text) return;
@@ -861,8 +1023,7 @@
       if (!file) return;
 
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل إرسال الصورة');
-        nameInput.focus();
+        checkUserRegistration();
         event.target.value = '';
         return;
       }
@@ -914,8 +1075,7 @@
 
     async function toggleAudioRecording() {
       if (!myUsername) {
-        alert('يرجى كتابة اسمك أولاً في خانة "حسابك" قبل التسجيل الصوتي');
-        nameInput.focus();
+        checkUserRegistration();
         return;
       }
 
@@ -975,6 +1135,53 @@
       }
     }
 
+    // ==========================================
+    // التنبيهات وإدارة الأحزاب
+    // ==========================================
+    function updateNotifyBtnUI() {
+      const btn = document.getElementById('notify-perm-btn');
+      if (!btn) return;
+      if (window.Notification && Notification.permission === 'granted') {
+        btn.innerHTML = '<span>🔔</span> <span>مفعلة ✓</span>';
+        btn.className = 'text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-1 rounded-xl transition flex items-center gap-1 font-medium';
+      } else {
+        btn.innerHTML = '<span>🔔</span> <span>تنبيهات</span>';
+        btn.className = 'text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 font-medium shadow-sm';
+      }
+    }
+
+    function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        alert('المتصفح لا يدعم نظام الإشعارات.');
+        return;
+      }
+      Notification.requestPermission().then((permission) => {
+        updateNotifyBtnUI();
+        if (permission === 'granted') {
+          showSystemNotification('تم تفعيل التنبيهات 🔔', 'ستصلك رسائل ومكالمات الختمة على هاتفك.');
+        } else {
+          alert('يرجى السماح بالإشعارات من إعدادات المتصفح.');
+        }
+      });
+    }
+
+    updateNotifyBtnUI();
+
+    function showSystemNotification(title, body) {
+      if (window.Notification && Notification.permission === 'granted') {
+        if (swRegistration && 'showNotification' in swRegistration) {
+          swRegistration.showNotification(title, {
+            body: body,
+            icon: 'icon.svg',
+            badge: 'icon.svg',
+            vibrate: [500, 200, 500, 200, 1000]
+          });
+        } else {
+          new Notification(title, { body: body, icon: 'icon.svg' });
+        }
+      }
+    }
+
     function switchTab(tab) {
       currentTab = tab;
       const khatmaView = document.getElementById('khatma-view');
@@ -998,8 +1205,7 @@
         tabChatBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition relative';
         resetBtn.classList.add('hidden');
         subTitle.innerText = 'المحادثة العامة والخاصة بين الأعضاء';
-        isInitialLoad = true;
-        loadChatMessages();
+        backToUserList();
       }
     }
 
@@ -1071,31 +1277,26 @@
       const modal = document.getElementById('action-modal');
       const title = document.getElementById('modal-title');
       const statusBox = document.getElementById('modal-status-box');
-      const nameInp = document.getElementById('reader-name-input');
-      const nameInputGroup = document.getElementById('name-input-group');
       const actionsContainer = document.getElementById('modal-actions');
-      const readLink = document.getElementById('read-online-link');
       const hizbIndicator = document.getElementById('hizb-indicator');
 
-      readLink.href = `https://quran.com/ar/hizb/${hizb.id}`;
-      hizbIndicator.innerText = `قراءة آيات الحزب ${hizb.id} كاملة بالرسم العثماني`;
+      const startThumn = ((hizb.id - 1) * 8) + 1;
+      const endThumn = hizb.id * 8;
+      hizbIndicator.innerText = `يتضمن الحزب ${hizb.id} الأثمان من ${startThumn} إلى ${endThumn} بالرسم العثماني.`;
       title.innerText = `الحزب رقم ${hizb.id}`;
       actionsContainer.innerHTML = '';
 
       if (hizb.status === 'available') {
-        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
-        statusBox.innerText = 'هذا الحزب غير محجوز ومتاح للقراءة.';
-        nameInputGroup.style.display = 'block';
-        nameInp.value = myUsername || '';
+        statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
+        statusBox.innerText = `الحزب متاح. الحجز سيتم باسمك: "${myUsername || 'القارئ'}"`;
         actionsContainer.innerHTML = `
           <button onclick="reserveHizb()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2.5 rounded-xl transition shadow">
             حجز وقراءة هذا الحزب
           </button>
         `;
       } else if (hizb.status === 'reading') {
-        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-amber-50 text-amber-800 border border-amber-100';
+        statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-amber-50 text-amber-800 border border-amber-100';
         statusBox.innerText = `قيد القراءة حالياً بواسطة: ${hizb.reader}`;
-        nameInputGroup.style.display = 'none';
         actionsContainer.innerHTML = `
           <button onclick="completeHizb()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-medium py-2.5 rounded-xl transition shadow">
             تأكيد إتمام القراءة ✓
@@ -1105,9 +1306,8 @@
           </button>
         `;
       } else {
-        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100';
+        statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100';
         statusBox.innerText = `تمت قراءة هذا الحزب بنجاح بواسطة: ${hizb.reader}. تقبل الله!`;
-        nameInputGroup.style.display = 'none';
         actionsContainer.innerHTML = `
           <button onclick="cancelHizb()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl transition">
             إعادة فتح الحزب للقراءة
@@ -1123,17 +1323,13 @@
     }
 
     function reserveHizb() {
-      const name = document.getElementById('reader-name-input').value.trim();
-      if (!name) { alert('يرجى كتابة الاسم أولاً.'); return; }
-      myUsername = name;
-      localStorage.setItem('chat_username', name);
-      nameInput.value = name;
-      registerUser(name);
-      listenForIncomingVoiceCalls(name);
-
+      if (!myUsername) {
+        checkUserRegistration();
+        return;
+      }
       const index = ahzab.findIndex(h => h && h.id === selectedHizbId);
       if (index !== -1) {
-        db.ref(`khatma_ahzab/${index}`).update({ status: 'reading', reader: name });
+        db.ref(`khatma_ahzab/${index}`).update({ status: 'reading', reader: myUsername });
       }
       closeModal();
     }
@@ -1193,6 +1389,8 @@
       const modal = document.getElementById('action-modal');
       if (event.target === modal) closeModal();
     };
+
+    checkUserRegistration();
   </script>
 </body>
 </html>
