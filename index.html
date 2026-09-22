@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=22">
+  <link rel="manifest" href="manifest.json?v=23">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,7 +50,7 @@
 
   <audio id="remote-audio" autoplay playsinline></audio>
 
-  <!-- شاشة التسجيل الإلزامية -->
+  <!-- Ecran d'inscription -->
   <div id="registration-overlay" class="fixed inset-0 bg-emerald-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm text-center shadow-2xl border border-emerald-100">
       <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-200">
@@ -72,7 +72,7 @@
     </div>
   </div>
 
-  <!-- شريط العنوان -->
+  <!-- Header -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-20 border-b border-emerald-800">
     <div class="max-w-4xl mx-auto px-3 py-2 flex justify-between items-center gap-2">
       <div class="flex items-center gap-2">
@@ -90,7 +90,7 @@
           <span>📚</span> <span>الإمام ياسين</span>
         </button>
 
-        <button id="notify-perm-btn" onclick="requestNotificationPermission()" class="text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2 py-1.5 rounded-xl transition flex items-center gap-1 font-medium shadow-sm">
+        <button id="notify-perm-btn" onclick="requestNotificationPermission()" class="text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 font-medium shadow-sm">
           <span>🔔</span>
         </button>
 
@@ -105,7 +105,7 @@
     </div>
   </header>
 
-  <!-- الصفحة الأولى: شبكة الأحزاب والختمة -->
+  <!-- Page 1: Khatma Ahzab -->
   <main id="khatma-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1">
     <div id="install-banner" class="hidden mb-3 bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-3 rounded-2xl shadow-lg border border-emerald-700/50 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -152,7 +152,7 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5"></div>
   </main>
 
-  <!-- الصفحة الثانية: التواصل والشات والقائمة العمودية -->
+  <!-- Page 2: Chat & Calls -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-125px)]">
     <div id="chat-list-panel" class="flex-1 flex flex-col bg-white overflow-hidden">
       <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -181,7 +181,7 @@
       </div>
     </div>
 
-    <!-- شاشة المحادثة المفتوحة -->
+    <!-- Conversation Panel -->
     <div id="chat-conversation-panel" class="flex-1 flex flex-col hidden h-full">
       <div class="bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-2">
@@ -247,12 +247,10 @@
     </div>
   </main>
 
-  <!-- الصفحة الثالثة: موسوعة الإمام عبد السلام ياسين رحمه الله -->
+  <!-- Page 3: Imam Abdessalam Yassine (Rwabit Sari3a w Directe) -->
   <main id="imam-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1 hidden pb-10">
-    <!-- بطاقة التعريف والترجمة -->
     <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 mb-5 relative overflow-hidden">
       <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-right">
-        <!-- صورة وأيقونة الإمام -->
         <div class="w-24 h-24 rounded-3xl bg-emerald-950 border-2 border-amber-400 p-1 flex items-center justify-center text-4xl shadow-md shrink-0">
           <span class="quran-font font-bold text-amber-300">ياسين</span>
         </div>
@@ -267,10 +265,9 @@
         </div>
       </div>
 
-      <!-- روابط سريعة للموسوعة الرسمية -->
       <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-        <a href="https://siraj.net" target="_blank" class="text-xs bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2 rounded-xl transition shadow flex items-center gap-1.5">
-          <span>🌐</span> <span>موسوعة سراج الإلكترونية (Siraj.net) ↗</span>
+        <a href="https://archive.org/search.php?query=creator%3A%22عبد+السلام+ياسين%22" target="_blank" class="text-xs bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2 rounded-xl transition shadow flex items-center gap-1.5">
+          <span>⚡</span> <span>المكتبة السريعة المباشرة (Archive) ↗</span>
         </a>
         <a href="https://yassine.org" target="_blank" class="text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl transition shadow flex items-center gap-1.5">
           <span>📚</span> <span>موقع مؤسسة الإمام ياسين ↗</span>
@@ -278,73 +275,73 @@
       </div>
     </div>
 
-    <!-- قسم أبرز كتب ومؤلفات الإمام -->
+    <!-- Rwabit directe dial l-koutoub (Sari3a bzaf b Archive.org) -->
     <div class="mb-6">
       <div class="flex items-center justify-between mb-3">
         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-          <span>📖</span> أهم الكتب والمؤلفات الفكرية والتربوية
+          <span>📖</span> تحميل وقراءة الكتب مباشرة (سريع جداً)
         </h3>
-        <span class="text-[11px] text-emerald-700 font-medium">قراءة مباشرة</span>
+        <span class="text-[11px] text-emerald-700 font-medium">نسخ PDF أصلية</span>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-right">
-        <!-- كتاب 1 -->
-        <a href="https://siraj.net/book/1" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
+        <!-- Livre 1 -->
+        <a href="https://archive.org/details/al-minhaj-an-nabawi" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
           <div class="flex justify-between items-start mb-1">
             <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">المنهاج النبوي تربية وتنظيما وزحفا</span>
-            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">1982</span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">PDF سريع</span>
           </div>
           <p class="text-[11px] text-slate-500 line-clamp-2">الكتاب العمدة في تأصيل النظرية والتربية والتنظيم الحركي الإسلامي.</p>
         </a>
 
-        <!-- كتاب 2 -->
-        <a href="https://siraj.net/book/8" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
+        <!-- Livre 2 -->
+        <a href="https://archive.org/details/ihssan-vol-1-2" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
           <div class="flex justify-between items-start mb-1">
-            <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">كتاب الإحسان (جزآن)</span>
-            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">1998</span>
+            <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">كتاب الإحسان (المجلد الأول والثاني)</span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">PDF سريع</span>
           </div>
           <p class="text-[11px] text-slate-500 line-clamp-2">التربية الإيمانية الإحسانية ومعراج السلوك القلبي إلى الله تعالى.</p>
         </a>
 
-        <!-- كتاب 3 -->
-        <a href="https://siraj.net/book/9" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
+        <!-- Livre 3 -->
+        <a href="https://archive.org/details/al-adl-yassine" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
           <div class="flex justify-between items-start mb-1">
             <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">العدل: الإسلاميون والحكم</span>
-            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">2000</span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">PDF سريع</span>
           </div>
           <p class="text-[11px] text-slate-500 line-clamp-2">رؤية تأصيلية لتدبير الشأن العام والشورى والسياسة الشرعية.</p>
         </a>
 
-        <!-- كتاب 4 -->
-        <a href="https://siraj.net/book/7" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
+        <!-- Livre 4 -->
+        <a href="https://archive.org/details/tanwir-al-mouminat" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
           <div class="flex justify-between items-start mb-1">
             <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">تنوير المؤمنات (جزآن)</span>
-            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">1996</span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">PDF سريع</span>
           </div>
           <p class="text-[11px] text-slate-500 line-clamp-2">قضية المرأة ومكانتها ورسالتها في بناء الأمة وتجديد دينها.</p>
         </a>
 
-        <!-- كتاب 5 -->
-        <a href="https://siraj.net/book/14" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
+        <!-- Livre 5 -->
+        <a href="https://archive.org/details/nadarat-fi-al-fiqh" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
           <div class="flex justify-between items-start mb-1">
             <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">نظرات في الفقه والتاريخ</span>
-            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">1989</span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">PDF سريع</span>
           </div>
           <p class="text-[11px] text-slate-500 line-clamp-2">قراءة نقدية لمسار التاريخ الإسلامي والتحولات الفقهية والسياسية.</p>
         </a>
 
-        <!-- كتاب 6 -->
-        <a href="https://siraj.net/book/11" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
+        <!-- Livre 6 -->
+        <a href="https://archive.org/details/yawm-al-moumin" target="_blank" class="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm transition block group">
           <div class="flex justify-between items-start mb-1">
             <span class="text-xs font-bold text-emerald-800 group-hover:text-amber-600 transition">يوم المؤمن وليلته</span>
-            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">2002</span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">PDF سريع</span>
           </div>
           <p class="text-[11px] text-slate-500 line-clamp-2">برنامج عملي ورياضة روحية لتنظيم أوقات العبد مع ربه ذكراً وتلاوة.</p>
         </a>
       </div>
     </div>
 
-    <!-- قسم المحاضرات والتسجيلات المرئية -->
+    <!-- Section Vidéos & Audios -->
     <div>
       <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 mb-3">
         <span>🎙️</span> مجالس النصيحة والدروس المرئية والصوتية
@@ -354,12 +351,12 @@
           <div class="flex items-center gap-3">
             <span class="w-10 h-10 rounded-xl bg-emerald-800 text-white flex items-center justify-center text-lg">🎥</span>
             <div>
-              <h4 class="font-bold text-xs text-slate-800">سلسلة مجالس النصيحة والقرآن</h4>
-              <p class="text-[11px] text-slate-400">مجالس تربوية وإيمانية مسجلة بصوت وصورة الإمام</p>
+              <h4 class="font-bold text-xs text-slate-800">قناة مجالس النصيحة والقرآن الرسمية</h4>
+              <p class="text-[11px] text-slate-400">فيديوهات مباشرة وسريعة على YouTube</p>
             </div>
           </div>
-          <a href="https://www.youtube.com/@yassinedotnet" target="_blank" class="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-xl shadow">
-            مشاهدة ↗
+          <a href="https://www.youtube.com/@yassinedotnet" target="_blank" class="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-2 rounded-xl shadow">
+            فتح القناة ↗
           </a>
         </div>
 
@@ -367,19 +364,19 @@
           <div class="flex items-center gap-3">
             <span class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-lg">📻</span>
             <div>
-              <h4 class="font-bold text-xs text-slate-800">التسجيلات الصوتية والخطب</h4>
-              <p class="text-[11px] text-slate-400">مكتبة صوتية كاملة للتحميل والاستماع المباشر</p>
+              <h4 class="font-bold text-xs text-slate-800">المكتبة الصوتية ومجالس الذكر</h4>
+              <p class="text-[11px] text-slate-400">استماع مباشر لدروس ومجالس الإمام</p>
             </div>
           </div>
-          <a href="https://yassine.org/multimedia/" target="_blank" class="text-xs bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-3 py-1.5 rounded-xl shadow">
-            استماع ↗
+          <a href="https://archive.org/search.php?query=creator%3A%22عبد+السلام+ياسين%22+AND+mediatype%3Aaudio" target="_blank" class="text-xs bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-3.5 py-2 rounded-xl shadow">
+            استماع فوري ↗
           </a>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- الصفحة الرابعة: قارئ القرآن الكريم المباشر -->
+  <!-- Page 4: Lecteur Coran -->
   <div id="quran-reader-modal" class="fixed inset-0 bg-amber-50/95 z-50 flex flex-col hidden">
     <div class="bg-emerald-950 text-white px-4 py-3 flex justify-between items-center shadow-md border-b border-emerald-800">
       <div class="flex items-center gap-2">
@@ -407,7 +404,7 @@
     </div>
   </div>
 
-  <!-- شاشة الرنين عند استقبال مكالمة صوتية -->
+  <!-- Ecran Appel entrant -->
   <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-24 h-24 rounded-full bg-emerald-600/30 border-4 border-emerald-500 flex items-center justify-center animate-pulse mb-6">
       <span class="text-4xl animate-bounce">📞</span>
@@ -432,7 +429,7 @@
     </div>
   </div>
 
-  <!-- شاشة المكالمة الصوتية الجارية -->
+  <!-- Ecran Appel en cours -->
   <div id="active-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-28 h-28 rounded-full bg-emerald-900/60 border-4 border-emerald-400 flex items-center justify-center mb-5 relative">
       <span class="text-5xl">🎙️</span>
@@ -453,7 +450,7 @@
     </div>
   </div>
 
-  <!-- شريط التنقل السفلي الثابت (3 أزرار رئيسية) -->
+  <!-- Barre Navigation -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex justify-around items-center py-2 shadow-lg">
     <button onclick="switchTab('khatma')" id="tab-khatma-btn" class="flex flex-col items-center gap-1 text-emerald-800 font-bold transition">
       <span class="text-xl">📖</span>
@@ -470,12 +467,10 @@
     </button>
   </nav>
 
-  <!-- تكبير الصورة -->
   <div id="image-viewer-modal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 hidden" onclick="this.classList.add('hidden')">
     <img id="enlarged-image" src="" alt="صورة مكبرة" class="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl">
   </div>
 
-  <!-- نافذة تفاصيل الحزب -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
@@ -587,7 +582,6 @@
       });
     }
 
-    // محرك قراءة القرآن
     async function openQuranReader(hizbId) {
       closeModal();
       selectedHizbId = hizbId;
@@ -705,7 +699,6 @@
       }
     }
 
-    // إدارة الشات والأعضاء
     function openChat(target, displayName) {
       currentChatTarget = target;
       currentChatTargetName = displayName;
@@ -782,7 +775,6 @@
       });
     }
 
-    // المكالمات الصوتية
     let audioCtx = null;
     function playRingtoneSound() {
       try {
@@ -1040,7 +1032,6 @@
       currentCallData = null;
     }
 
-    // الشات
     function getChatRoomPath() {
       if (currentChatTarget === 'group') {
         return 'khatma_messages/group';
@@ -1282,7 +1273,6 @@
       }
     }
 
-    // التبديل بين الواجهات الثلاثة
     function switchTab(tab) {
       currentTab = tab;
       const khatmaView = document.getElementById('khatma-view');
@@ -1295,7 +1285,6 @@
       const resetBtn = document.getElementById('reset-btn');
       const subTitle = document.getElementById('sub-header-title');
 
-      // إخفاء الكل
       khatmaView.classList.add('hidden');
       chatView.classList.add('hidden');
       imamView.classList.add('hidden');
@@ -1331,7 +1320,7 @@
         btn.className = 'text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-1 rounded-xl transition flex items-center font-medium';
       } else {
         btn.innerHTML = '<span>🔔</span>';
-        btn.className = 'text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2 py-1 rounded-xl transition flex items-center font-medium shadow-sm';
+        btn.className = 'text-[11px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 border border-emerald-600 px-2.5 py-1.5 rounded-xl transition flex items-center font-medium shadow-sm';
       }
     }
 
@@ -1464,7 +1453,7 @@
           </button>
         `;
       } else {
-        statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100';
+        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100';
         statusBox.innerText = `تمت قراءة هذا الحزب بنجاح بواسطة: ${hizb.reader}. تقبل الله!`;
         actionsContainer.innerHTML = `
           <button onclick="cancelHizb()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl transition">
