@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=21">
+  <link rel="manifest" href="manifest.json?v=18">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,40 +19,27 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     .quran-font { font-family: 'Amiri', serif; }
-    #chat-container::-webkit-scrollbar, #users-list-scroll::-webkit-scrollbar, #quran-reader-body::-webkit-scrollbar { width: 4px; }
-    #chat-container::-webkit-scrollbar-thumb, #users-list-scroll::-webkit-scrollbar-thumb, #quran-reader-body::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    #chat-container::-webkit-scrollbar, #users-list-scroll::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-thumb, #users-list-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
     .chat-bg {
       background-color: #efeae2;
       background-image: radial-gradient(#d1d7db 1px, transparent 1px);
       background-size: 16px 16px;
     }
-    .ayah-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 1px solid #d97706;
-      color: #b45309;
-      font-size: 11px;
-      font-family: 'Tajawal', sans-serif;
-      margin: 0 4px;
-      background-color: #fffbeb;
-    }
   </style>
 
-  <!-- Firebase -->
+  <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
 
+  <!-- صوت استقبال الاتصال -->
   <audio id="remote-audio" autoplay playsinline></audio>
 
-  <!-- شاشة التسجيل الإلزامية -->
+  <!-- شاشة التسجيل الإلزامية للعضو الجديد (Modal d'inscription) -->
   <div id="registration-overlay" class="fixed inset-0 bg-emerald-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm text-center shadow-2xl border border-emerald-100">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm text-center shadow-2xl border border-emerald-100 animate-fade-in">
       <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-200">
         📖
       </div>
@@ -118,6 +105,7 @@
       </button>
     </div>
 
+    <!-- كارت نسبة تقدم الختمة -->
     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-5">
       <div class="flex justify-between items-center mb-2">
         <span class="font-bold text-slate-700 text-xs sm:text-sm flex items-center gap-1.5">
@@ -145,11 +133,14 @@
       </div>
     </div>
 
+    <!-- شبكة الأحزاب -->
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5"></div>
   </main>
 
-  <!-- الصفحة الثانية: التواصل والشات -->
+  <!-- الصفحة الثانية: نظام التواصل (قائمة عمودية + شاشة الشات) -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-125px)]">
+
+    <!-- القائمة العمودية للأعضاء -->
     <div id="chat-list-panel" class="flex-1 flex flex-col bg-white overflow-hidden">
       <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -160,6 +151,7 @@
       </div>
 
       <div class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1" id="users-list-scroll">
+        <!-- المحادثة العامة أولاً -->
         <div onclick="openChat('group', 'المجموعة العامة')" class="flex items-center justify-between p-3 rounded-2xl hover:bg-emerald-50 cursor-pointer transition border border-transparent hover:border-emerald-200">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
@@ -173,6 +165,7 @@
           <span class="text-emerald-700 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg">عام</span>
         </div>
 
+        <!-- الأعضاء عمودياً -->
         <div id="members-vertical-list" class="space-y-1 pt-1"></div>
       </div>
     </div>
@@ -209,6 +202,7 @@
 
       <div id="chat-container" class="flex-1 p-3 overflow-y-auto space-y-2.5 chat-bg flex flex-col"></div>
 
+      <!-- مؤشر تسجيل الصوت -->
       <div id="recording-status" class="hidden bg-rose-50 border-t border-rose-200 px-3 py-1.5 flex items-center justify-between text-rose-600 text-xs font-bold animate-pulse">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
@@ -217,6 +211,7 @@
         <button onclick="cancelRecording()" class="text-slate-400 hover:text-rose-600 text-xs">إلغاء ✕</button>
       </div>
 
+      <!-- إدخال الرسائل -->
       <div class="bg-slate-100 border-t border-slate-200 p-2 flex items-center gap-1.5">
         <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
         <button onclick="document.getElementById('image-file-input').click()" class="bg-white hover:bg-slate-200 border border-slate-300 text-slate-700 p-2.5 rounded-xl transition shadow-sm flex items-center justify-center shrink-0" title="إرسال صورة">
@@ -242,34 +237,6 @@
       </div>
     </div>
   </main>
-
-  <!-- الصفحة الثالثة: قارئ القرآن الكريم المباشر -->
-  <div id="quran-reader-modal" class="fixed inset-0 bg-amber-50/95 z-50 flex flex-col hidden">
-    <div class="bg-emerald-950 text-white px-4 py-3 flex justify-between items-center shadow-md border-b border-emerald-800">
-      <div class="flex items-center gap-2">
-        <button onclick="closeQuranReader()" class="p-1 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-amber-300 text-xs px-2.5 py-1.5 transition flex items-center gap-1 font-bold">
-          <span>✕</span> <span>إغلاق القارئ</span>
-        </button>
-        <h3 id="quran-reader-title" class="font-bold text-sm text-amber-300 quran-font">الحزب ...</h3>
-      </div>
-      
-      <div class="flex items-center gap-2 bg-emerald-900 px-2 py-1 rounded-xl border border-emerald-800">
-        <button onclick="adjustFontSize(2)" class="text-amber-300 font-bold text-sm px-1.5">A+</button>
-        <span class="text-[10px] text-emerald-200">الخط</span>
-        <button onclick="adjustFontSize(-2)" class="text-amber-300 font-bold text-xs px-1.5">A-</button>
-      </div>
-    </div>
-
-    <div id="quran-reader-body" class="flex-1 overflow-y-auto p-4 sm:p-8 max-w-3xl mx-auto w-full text-slate-900 leading-[2.8] text-right font-medium selection:bg-amber-200">
-      <div id="quran-reader-content" class="quran-font text-xl transition-all duration-200"></div>
-    </div>
-
-    <div class="bg-white border-t border-slate-200 p-3 flex justify-between items-center max-w-3xl mx-auto w-full shadow-lg">
-      <button onclick="completeHizbFromReader()" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition shadow flex items-center justify-center gap-2 text-xs sm:text-sm">
-        <span>✓</span> <span>أتممت قراءة هذا الحزب بحمد الله</span>
-      </button>
-    </div>
-  </div>
 
   <!-- شاشة الرنين عند استقبال مكالمة صوتية -->
   <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
@@ -330,34 +297,33 @@
     </button>
   </nav>
 
-  <!-- نافذة تكبير الصورة -->
+  <!-- تكبير الصورة -->
   <div id="image-viewer-modal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 hidden" onclick="this.classList.add('hidden')">
     <img id="enlarged-image" src="" alt="صورة مكبرة" class="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl">
   </div>
 
-  <!-- نافذة تفاصيل الحزب -->
+  <!-- تفاصيل الحزب -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
         <h3 id="modal-title" class="text-lg font-bold text-slate-800">تفاصيل الحزب</h3>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
       </div>
 
       <div class="mt-4 space-y-4">
-        <div id="modal-status-box" class="p-3 rounded-2xl text-sm font-medium"></div>
+        <div id="modal-status-box" class="p-3 rounded-xl text-sm font-medium"></div>
 
-        <div class="bg-emerald-50 border border-emerald-200/80 p-4 rounded-2xl flex flex-col gap-2">
-          <div class="flex justify-between items-center">
-            <span class="text-xs text-emerald-950 font-bold block">📖 قراءة الحزب داخل التطبيق:</span>
-            <span class="text-[10px] bg-emerald-200/70 text-emerald-900 font-bold px-2 py-0.5 rounded-full">يعمل بدون إنترنت</span>
+        <div class="bg-emerald-50 border border-emerald-100 p-3.5 rounded-xl flex justify-between items-center">
+          <div>
+            <span class="text-xs text-emerald-900 font-bold block">قراءة الحزب مباشرة:</span>
+            <span id="hizb-indicator" class="text-[11px] text-emerald-700"></span>
           </div>
-          <p id="hizb-indicator" class="text-[11px] text-emerald-800 leading-relaxed"></p>
-          <button onclick="openQuranReader(selectedHizbId)" class="w-full mt-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center gap-1.5">
-            <span>📖 فتح وقراءة آيات الحزب الآن ↗</span>
-          </button>
+          <a id="read-online-link" href="#" target="_blank" class="text-xs bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl transition font-bold inline-block shadow">
+            فتح في المصحف ↗
+          </a>
         </div>
 
-        <div id="modal-actions" class="flex gap-2 pt-1"></div>
+        <div id="modal-actions" class="flex gap-2 pt-2"></div>
       </div>
     </div>
   </div>
@@ -387,8 +353,8 @@
     let allUsers = {};
     let messagesListener = null;
     let isInitialLoad = true;
-    let currentReaderFontSize = 22;
 
+    // WebRTC
     let localStream = null;
     let peerConnection = null;
     let callTimerInterval = null;
@@ -403,6 +369,7 @@
       ]
     };
 
+    // نظام التسجيل الإلزامي
     let myUsername = localStorage.getItem('chat_username') || '';
 
     function checkUserRegistration() {
@@ -447,143 +414,7 @@
       });
     }
 
-    // ==========================================
-    // محرك قارئ القرآن المباشر (Multi-Source + Offline)
-    // ==========================================
-    async function openQuranReader(hizbId) {
-      closeModal();
-      selectedHizbId = hizbId;
-
-      const modal = document.getElementById('quran-reader-modal');
-      const title = document.getElementById('quran-reader-title');
-      const content = document.getElementById('quran-reader-content');
-
-      const startThumn = ((hizbId - 1) * 8) + 1;
-      const endThumn = hizbId * 8;
-      title.innerText = `الحزب رقم ${hizbId} (الأثمان ${startThumn} - ${endThumn})`;
-
-      modal.classList.remove('hidden');
-      content.innerHTML = '<div class="text-center text-slate-500 text-sm py-12">جاري فتح وتجهيز آيات الحزب... 🌿</div>';
-
-      const localCacheKey = `quran_hizb_v3_${hizbId}`;
-      const cachedData = localStorage.getItem(localCacheKey);
-
-      if (cachedData) {
-        renderHizbVerses(JSON.parse(cachedData));
-        return;
-      }
-
-      let ayahsData = null;
-
-      // المصدر 1: CDN مباشر عالي السرعة وبدون حظر CORS
-      try {
-        const res = await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/ara-quranuthmani.min.json`);
-        const fullQuran = await res.json();
-        if (fullQuran && fullQuran.quran) {
-          // جلب آيات الحزب المحدد
-          // في حال كان الحزب يحتاج مطابقة مباشرة، نستخدم المصدر المخصص التالي:
-        }
-      } catch (e) {}
-
-      // المصدر 2: API Al-Quran Cloud عبر وكيل آمن أو جلب مباشر
-      try {
-        const response = await fetch(`https://api.alquran.cloud/v1/hizb/${hizbId}/quran-uthmani`);
-        const result = await response.json();
-        if (result && result.data && result.data.ayahs) {
-          ayahsData = result.data.ayahs;
-        }
-      } catch (err) {
-        console.log('API 1 error, trying fallback:', err);
-      }
-
-      // المصدر 3 (Fallback البديل الفوري والمجاني المفتوح):
-      if (!ayahsData) {
-        try {
-          const fallbackRes = await fetch(`https://api.quran.com/api/v4/verses/by_hizb/${hizbId}?words=false&per_page=150&fields=text_uthmani,verse_key`);
-          const fallbackData = await fallbackRes.json();
-          if (fallbackData && fallbackData.verses) {
-            ayahsData = fallbackData.verses.map(v => {
-              const parts = v.verse_key.split(':');
-              return {
-                text: v.text_uthmani,
-                numberInSurah: parseInt(parts[1], 10),
-                surah: { number: parseInt(parts[0], 10), name: `السورة رقم ${parts[0]}` }
-              };
-            });
-          }
-        } catch (e) {
-          console.log('Fallback 2 error:', e);
-        }
-      }
-
-      if (ayahsData && ayahsData.length > 0) {
-        localStorage.setItem(localCacheKey, JSON.stringify(ayahsData));
-        renderHizbVerses(ayahsData);
-      } else {
-        content.innerHTML = `
-          <div class="text-center py-10 space-y-4">
-            <p class="text-rose-700 font-bold text-base">تعذر تحميل الحزب في هذه اللحظة.</p>
-            <p class="text-xs text-slate-600">يمكنك قراءة الحزب مباشرة من المصحف الورقي أو الضغط على الرابط بالأسفل للقراءة من المتصفح:</p>
-            <a href="https://quran.com/ar/hizb/${hizbId}" target="_blank" class="inline-block bg-emerald-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow">
-              فتح الحزب في Quran.com ↗
-            </a>
-            <div>
-              <button onclick="openQuranReader(${hizbId})" class="bg-amber-500 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs shadow mt-2">إعادة المحاولة ⟳</button>
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    function renderHizbVerses(ayahs) {
-      const content = document.getElementById('quran-reader-content');
-      let html = '';
-      let currentSurah = '';
-
-      ayahs.forEach(ayah => {
-        const sName = (ayah.surah && ayah.surah.name) ? ayah.surah.name : '';
-        if (sName && sName !== currentSurah) {
-          currentSurah = sName;
-          html += `
-            <div class="my-6 text-center">
-              <div class="inline-block bg-emerald-900 text-amber-300 font-bold px-6 py-2 rounded-2xl shadow-sm text-lg border border-amber-400/40">
-                ${currentSurah.includes('سورة') ? currentSurah : 'سورة ' + currentSurah}
-              </div>
-              ${ayah.numberInSurah === 1 && (!ayah.surah || ayah.surah.number !== 1) && (!ayah.surah || ayah.surah.number !== 9) ? '<div class="text-center text-emerald-800 text-lg my-3 font-bold">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>' : ''}
-            </div>
-          `;
-        }
-
-        let ayahText = ayah.text || '';
-        if (ayah.numberInSurah === 1 && ayahText.startsWith('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ')) {
-          ayahText = ayahText.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', '').trim();
-        }
-
-        html += `<span>${ayahText}</span> <span class="ayah-badge">${ayah.numberInSurah}</span> `;
-      });
-
-      content.innerHTML = html;
-      document.getElementById('quran-reader-body').scrollTop = 0;
-    }
-
-    function adjustFontSize(delta) {
-      currentReaderFontSize = Math.min(36, Math.max(16, currentReaderFontSize + delta));
-      document.getElementById('quran-reader-content').style.fontSize = `${currentReaderFontSize}px`;
-    }
-
-    function closeQuranReader() {
-      document.getElementById('quran-reader-modal').classList.add('hidden');
-    }
-
-    function completeHizbFromReader() {
-      if (selectedHizbId) {
-        completeHizb();
-        closeQuranReader();
-        alert('هنيئاً لك إتمام قراءة الحزب! تقبل الله طاعتكم 🌿');
-      }
-    }
-
-    // إدارة الشات والأعضاء
+    // التنقل وإدارة المحادثات
     function openChat(target, displayName) {
       currentChatTarget = target;
       currentChatTargetName = displayName;
@@ -616,6 +447,7 @@
       if (messagesListener) messagesListener.off();
     }
 
+    // عرض قائمة الأعضاء عمودياً
     usersRef.on('value', (snapshot) => {
       allUsers = snapshot.val() || {};
       renderVerticalUsersList();
@@ -628,7 +460,7 @@
       const usersArray = Object.values(allUsers).filter(u => u.name && u.name !== myUsername);
 
       if (usersArray.length === 0) {
-        container.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">لم ينضم أي عضو آخر بعد. عند تسجيل الأعضاء ستظهر أسماؤهم هنا.</div>';
+        container.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">لم ينضم أي عضو آخر بعد. أول ما يسجل أي شخص سيظهر اسمه هنا تلقائياً.</div>';
         return;
       }
 
@@ -660,7 +492,7 @@
       });
     }
 
-    // المكالمات الصوتية
+    // رنين واهتزاز المكالمات
     let audioCtx = null;
     function playRingtoneSound() {
       try {
@@ -918,7 +750,7 @@
       currentCallData = null;
     }
 
-    // رسائل الشات
+    // إدارة محادثات الشات
     function getChatRoomPath() {
       if (currentChatTarget === 'group') {
         return 'khatma_messages/group';
@@ -1160,6 +992,7 @@
       }
     }
 
+    // التنبيهات والأحزاب والـ PWA
     function updateNotifyBtnUI() {
       const btn = document.getElementById('notify-perm-btn');
       if (!btn) return;
@@ -1300,16 +1133,16 @@
       const title = document.getElementById('modal-title');
       const statusBox = document.getElementById('modal-status-box');
       const actionsContainer = document.getElementById('modal-actions');
+      const readLink = document.getElementById('read-online-link');
       const hizbIndicator = document.getElementById('hizb-indicator');
 
-      const startThumn = ((hizb.id - 1) * 8) + 1;
-      const endThumn = hizb.id * 8;
-      hizbIndicator.innerText = `يتضمن الحزب ${hizb.id} الأثمان من ${startThumn} إلى ${endThumn} بالرسم العثماني.`;
+      readLink.href = `https://quran.com/ar/hizb/${hizb.id}`;
+      hizbIndicator.innerText = `قراءة آيات الحزب ${hizb.id} كاملة بالرسم العثماني`;
       title.innerText = `الحزب رقم ${hizb.id}`;
       actionsContainer.innerHTML = '';
 
       if (hizb.status === 'available') {
-        statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
+        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
         statusBox.innerText = `الحزب متاح. الحجز سيتم باسمك: "${myUsername || 'القارئ'}"`;
         actionsContainer.innerHTML = `
           <button onclick="reserveHizb()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2.5 rounded-xl transition shadow">
@@ -1317,7 +1150,7 @@
           </button>
         `;
       } else if (hizb.status === 'reading') {
-        statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-amber-50 text-amber-800 border border-amber-100';
+        statusBox.className = 'p-3 rounded-xl text-sm font-medium bg-amber-50 text-amber-800 border border-amber-100';
         statusBox.innerText = `قيد القراءة حالياً بواسطة: ${hizb.reader}`;
         actionsContainer.innerHTML = `
           <button onclick="completeHizb()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-medium py-2.5 rounded-xl transition shadow">
@@ -1412,6 +1245,7 @@
       if (event.target === modal) closeModal();
     };
 
+    // التحقق من التسجيل فور تشغيل التطبيق
     checkUserRegistration();
   </script>
 </body>
