@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=30">
+  <link rel="manifest" href="manifest.json?v=31">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -559,6 +559,7 @@
     <img id="enlarged-image" src="" alt="صورة مكبرة" class="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl">
   </div>
 
+  <!-- Modal تفاصيل الحزب -->
   <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 text-right">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
@@ -569,7 +570,7 @@
       <div class="mt-4 space-y-4">
         <div id="modal-status-box" class="p-3 rounded-2xl text-sm font-medium"></div>
 
-        <div class="bg-emerald-50 border border-emerald-200/80 p-4 rounded-2xl flex flex-col gap-2">
+        <div id="modal-reader-box" class="bg-emerald-50 border border-emerald-200/80 p-4 rounded-2xl flex flex-col gap-2">
           <div class="flex justify-between items-center">
             <span class="text-xs text-emerald-950 font-bold block">📖 قراءة الحزب داخل التطبيق:</span>
             <span class="text-[10px] bg-emerald-200/70 text-emerald-900 font-bold px-2 py-0.5 rounded-full">يعمل بدون إنترنت</span>
@@ -676,7 +677,7 @@
     }
 
     // ==========================================
-    // Aw9at Salat (Calcul s7i7 100% b daqayeq)
+    // محرك أوقات الصلاة الدقيق
     // ==========================================
     function parseToMinutes(tStr) {
       if (!tStr) return 0;
@@ -701,7 +702,6 @@
       }
 
       try {
-        // Azrou Lat/Long pour précision absolue au Maroc
         let url = `https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Morocco&method=3`;
         if (city === 'Azrou') {
           url = `https://api.aladhan.com/v1/timings?latitude=33.4344&longitude=-5.2213&method=3`;
@@ -775,7 +775,6 @@
       let nextPrayer = null;
       let diffMinutes = 0;
 
-      // Recherche de la première prière dont les minutes sont supérieures aux minutes actuelles
       for (let i = 0; i < prayers.length; i++) {
         if (prayers[i].mins > currentMinutes || (prayers[i].mins === currentMinutes && currentSeconds === 0)) {
           nextPrayer = prayers[i];
@@ -784,7 +783,6 @@
         }
       }
 
-      // Si toutes les prières de la journée sont passées (après l'Isha), la suivante est le Fajr de demain
       if (!nextPrayer) {
         nextPrayer = prayers[0];
         diffMinutes = (24 * 60 - currentMinutes) + prayers[0].mins;
@@ -1726,7 +1724,7 @@
         const endThumn = hizb.id * 8;
 
         card.className = `${bgClass} border ${borderClass} rounded-2xl p-2.5 flex flex-col justify-between items-center text-center cursor-pointer transition shadow-sm hover:shadow-md active:scale-95 min-h-[88px]`;
-        card.onclick = () => openHizbModal(hizb.id);
+        card.onclick = () => handleHizbClick(hizb.id);
 
         card.innerHTML = `
           <div class="font-bold text-slate-800 text-sm sm:text-base">الحزب ${hizb.id}</div>
@@ -1745,6 +1743,29 @@
       document.getElementById('progress-text').innerText = `${completedCount} / 60 حزب (${percent}%)`;
     }
 
+    // ==========================================
+    // حماية الحزب المحجوز: منع الأعضاء الآخرين من فتحه
+    // ==========================================
+    function handleHizbClick(id) {
+      if (!myUsername) {
+        checkUserRegistration();
+        return;
+      }
+
+      const hizb = ahzab.find(h => h && h.id === id);
+      if (!hizb) return;
+
+      // إذا كان الحزب محجوزاً أو مقروءاً بواسطة شخص آخر غير المستخدم الحالي
+      if (hizb.status !== 'available' && hizb.reader && hizb.reader.trim() !== myUsername.trim()) {
+        const actionText = hizb.status === 'reading' ? 'محجوز حالياً وقيد القراءة' : 'تمت قراءته';
+        alert(`⚠️ عذراً أخي الكريم:\n\nهذا الحزب (${id}) ${actionText} بواسطة: [ ${hizb.reader} ].\n\nيرجى اختيار حزب آخر من الأحزاب المتاحة باللون الأخضر 🌿`);
+        return; // منع فتح النافذة نهائياً
+      }
+
+      // إذا كان متاحاً أو محجوزاً لنفس المستخدم، يفتح بشكل طبيعي
+      openHizbModal(id);
+    }
+
     function openHizbModal(id) {
       selectedHizbId = id;
       const hizb = ahzab.find(h => h && h.id === id);
@@ -1754,6 +1775,7 @@
       const title = document.getElementById('modal-title');
       const statusBox = document.getElementById('modal-status-box');
       const actionsContainer = document.getElementById('modal-actions');
+      const readerBox = document.getElementById('modal-reader-box');
       const hizbIndicator = document.getElementById('hizb-indicator');
 
       const startThumn = ((hizb.id - 1) * 8) + 1;
@@ -1763,6 +1785,7 @@
       actionsContainer.innerHTML = '';
 
       if (hizb.status === 'available') {
+        readerBox.classList.remove('hidden');
         statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-100';
         statusBox.innerText = `الحزب متاح. الحجز سيتم باسمك: "${myUsername || 'القارئ'}"`;
         actionsContainer.innerHTML = `
@@ -1771,8 +1794,9 @@
           </button>
         `;
       } else if (hizb.status === 'reading') {
+        readerBox.classList.remove('hidden');
         statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-amber-50 text-amber-800 border border-amber-100';
-        statusBox.innerText = `قيد القراءة حالياً بواسطة: ${hizb.reader}`;
+        statusBox.innerText = `هذا الحزب محجوز باسمك حالياً. يمكنك قراءته أو تأكيد إتمامه.`;
         actionsContainer.innerHTML = `
           <button onclick="completeHizb()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-medium py-2.5 rounded-xl transition shadow">
             تأكيد إتمام القراءة ✓
@@ -1782,11 +1806,12 @@
           </button>
         `;
       } else {
+        readerBox.classList.remove('hidden');
         statusBox.className = 'p-3 rounded-2xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100';
-        statusBox.innerText = `تمت قراءة هذا الحزب بنجاح بواسطة: ${hizb.reader}. تقبل الله!`;
+        statusBox.innerText = `تمت قراءة هذا الحزب بنجاح بواسطتك. تقبل الله طاعتكم!`;
         actionsContainer.innerHTML = `
           <button onclick="cancelHizb()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl transition">
-            إعادة فتح الحزب للقراءة
+            إعادة فتح الحزب للقراءة من جديد
           </button>
         `;
       }
