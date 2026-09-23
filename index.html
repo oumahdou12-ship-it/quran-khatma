@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=29">
+  <link rel="manifest" href="manifest.json?v=30">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -377,7 +377,7 @@
     </div>
   </main>
 
-  <!-- Page 4: Mawakit Salat (معالجة الترتيب الشرعي الصحيح) -->
+  <!-- Page 4: Mawakit Salat (معالجة دقيقة بالدقائق لمنع أي قفز) -->
   <main id="prayer-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1 hidden pb-10">
     <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white rounded-3xl p-6 shadow-md border border-emerald-800 mb-5 text-center relative overflow-hidden">
       <div class="w-16 h-16 rounded-2xl bg-emerald-950/80 border border-amber-400/40 flex items-center justify-center text-3xl mx-auto mb-3">
@@ -409,7 +409,7 @@
         </select>
       </div>
 
-      <!-- العد التنازلي للصلاة القادمة بدقة تامة -->
+      <!-- العد التنازلي للصلاة القادمة -->
       <div class="mt-5 bg-emerald-950/60 rounded-2xl p-3 border border-emerald-800 inline-block px-6">
         <span class="text-[11px] text-emerald-300 block mb-0.5">الصلاة القادمة:</span>
         <span id="next-prayer-name" class="font-bold text-amber-300 text-sm">جاري الحساب...</span>
@@ -676,11 +676,13 @@
     }
 
     // ==========================================
-    // محرك أوقات الصلاة الدقيق (حساب الصلوات الخمس فقط)
+    // Aw9at Salat (Calcul s7i7 100% b daqayeq)
     // ==========================================
-    function cleanTime(tStr) {
-      if (!tStr) return '00:00';
-      return tStr.split(' ')[0].trim();
+    function parseToMinutes(tStr) {
+      if (!tStr) return 0;
+      const clean = tStr.split(' ')[0].trim();
+      const [h, m] = clean.split(':').map(Number);
+      return (h * 60) + m;
     }
 
     async function fetchPrayerTimes() {
@@ -699,7 +701,13 @@
       }
 
       try {
-        const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Morocco&method=3`);
+        // Azrou Lat/Long pour précision absolue au Maroc
+        let url = `https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Morocco&method=3`;
+        if (city === 'Azrou') {
+          url = `https://api.aladhan.com/v1/timings?latitude=33.4344&longitude=-5.2213&method=3`;
+        }
+
+        const res = await fetch(url);
         const json = await res.json();
         if (json && json.data && json.data.timings) {
           localStorage.setItem(`prayer_times_${city}`, JSON.stringify({
@@ -717,12 +725,12 @@
 
     function renderPrayerTimes(data) {
       currentPrayerTimes = {
-        Fajr: cleanTime(data.timings.Fajr),
-        Sunrise: cleanTime(data.timings.Sunrise),
-        Dhuhr: cleanTime(data.timings.Dhuhr),
-        Asr: cleanTime(data.timings.Asr),
-        Maghrib: cleanTime(data.timings.Maghrib),
-        Isha: cleanTime(data.timings.Isha)
+        Fajr: data.timings.Fajr.split(' ')[0].trim(),
+        Sunrise: data.timings.Sunrise.split(' ')[0].trim(),
+        Dhuhr: data.timings.Dhuhr.split(' ')[0].trim(),
+        Asr: data.timings.Asr.split(' ')[0].trim(),
+        Maghrib: data.timings.Maghrib.split(' ')[0].trim(),
+        Isha: data.timings.Isha.split(' ')[0].trim()
       };
 
       document.getElementById('prayer-fajr').innerText = currentPrayerTimes.Fajr;
@@ -748,60 +756,51 @@
     function updateCountdown() {
       if (!currentPrayerTimes) return;
       const now = new Date();
+      const currentMinutes = (now.getHours() * 60) + now.getMinutes();
+      const currentSeconds = now.getSeconds();
 
-      // الصلوات الخمس المفروضة بالترتيب الشرعي الزمني (بدون الشروق)
       const prayers = [
-        { id: 'fajr', name: 'الفجر', time: currentPrayerTimes.Fajr },
-        { id: 'dhuhr', name: 'الظهر', time: currentPrayerTimes.Dhuhr },
-        { id: 'asr', name: 'العصر', time: currentPrayerTimes.Asr },
-        { id: 'maghrib', name: 'المغرب', time: currentPrayerTimes.Maghrib },
-        { id: 'isha', name: 'العشاء', time: currentPrayerTimes.Isha }
+        { id: 'fajr', name: 'الفجر', time: currentPrayerTimes.Fajr, mins: parseToMinutes(currentPrayerTimes.Fajr) },
+        { id: 'dhuhr', name: 'الظهر', time: currentPrayerTimes.Dhuhr, mins: parseToMinutes(currentPrayerTimes.Dhuhr) },
+        { id: 'asr', name: 'العصر', time: currentPrayerTimes.Asr, mins: parseToMinutes(currentPrayerTimes.Asr) },
+        { id: 'maghrib', name: 'المغرب', time: currentPrayerTimes.Maghrib, mins: parseToMinutes(currentPrayerTimes.Maghrib) },
+        { id: 'isha', name: 'العشاء', time: currentPrayerTimes.Isha, mins: parseToMinutes(currentPrayerTimes.Isha) }
       ];
 
-      // إعادة تلوين الكروت للوضع العادي
       ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].forEach(k => {
         const el = document.getElementById(`card-${k}`);
-        if (el) {
-          el.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50/50');
-        }
+        if (el) el.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50/50');
       });
 
       let nextPrayer = null;
-      let minDiff = Infinity;
+      let diffMinutes = 0;
 
+      // Recherche de la première prière dont les minutes sont supérieures aux minutes actuelles
       for (let i = 0; i < prayers.length; i++) {
-        const p = prayers[i];
-        const [h, m] = p.time.split(':').map(Number);
-        const pDate = new Date();
-        pDate.setHours(h, m, 0, 0);
-
-        let diff = pDate - now;
-        // إذا كان وقت الصلاة مازال قادماً اليوم
-        if (diff > 0 && diff < minDiff) {
-          minDiff = diff;
-          nextPrayer = p;
-          break; // أول صلاة قادمة زمنياً هي الصلاة التالية مباشرة
+        if (prayers[i].mins > currentMinutes || (prayers[i].mins === currentMinutes && currentSeconds === 0)) {
+          nextPrayer = prayers[i];
+          diffMinutes = prayers[i].mins - currentMinutes;
+          break;
         }
       }
 
-      // إذا مرت كل صلوات اليوم (بعد العشاء)، فالصلاة القادمة هي فجر الغد
+      // Si toutes les prières de la journée sont passées (après l'Isha), la suivante est le Fajr de demain
       if (!nextPrayer) {
-        const [h, m] = prayers[0].time.split(':').map(Number);
-        const tomorrowFajr = new Date();
-        tomorrowFajr.setDate(tomorrowFajr.getDate() + 1);
-        tomorrowFajr.setHours(h, m, 0, 0);
-        minDiff = tomorrowFajr - now;
         nextPrayer = prayers[0];
+        diffMinutes = (24 * 60 - currentMinutes) + prayers[0].mins;
       }
 
       if (nextPrayer) {
-        document.getElementById('next-prayer-name').innerText = `صلاة ${nextPrayer.name} (${nextPrayer.time})`;
-        const hours = Math.floor(minDiff / (1000 * 60 * 60));
-        const mins = Math.floor((minDiff % (1000 * 60 * 60)) / (1000 * 60));
-        const secs = Math.floor((minDiff % (1000 * 60)) / 1000);
-        document.getElementById('next-prayer-countdown').innerText = `متبقي: ${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        let totalSeconds = (diffMinutes * 60) - currentSeconds;
+        if (totalSeconds < 0) totalSeconds = 0;
 
-        // إبراز كارت الصلاة القادمة بلون ذهبي
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+
+        document.getElementById('next-prayer-name').innerText = `صلاة ${nextPrayer.name} (${nextPrayer.time})`;
+        document.getElementById('next-prayer-countdown').innerText = `متبقي: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
         const nextCard = document.getElementById(`card-${nextPrayer.id}`);
         if (nextCard) {
           nextCard.classList.add('ring-2', 'ring-amber-500', 'bg-amber-50/50');
@@ -809,7 +808,7 @@
       }
     }
 
-    // تتبع الرسائل غير المقروءة
+    // Tracker messages non lus
     function initUnreadMessagesTracker() {
       if (!myUsername) return;
 
