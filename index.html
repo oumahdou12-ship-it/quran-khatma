@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=27">
+  <link rel="manifest" href="manifest.json?v=28">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -377,7 +377,7 @@
     </div>
   </main>
 
-  <!-- Page 4: Mawakit Salat (جديدة) -->
+  <!-- Page 4: Mawakit Salat (مع مدينة أزرو الافتراضية) -->
   <main id="prayer-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1 hidden pb-10">
     <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white rounded-3xl p-6 shadow-md border border-emerald-800 mb-5 text-center relative overflow-hidden">
       <div class="w-16 h-16 rounded-2xl bg-emerald-950/80 border border-amber-400/40 flex items-center justify-center text-3xl mx-auto mb-3">
@@ -386,22 +386,26 @@
       <h2 class="text-lg font-bold text-amber-300">مواقيت الصلاة الرسمية بالمغرب</h2>
       <p id="prayer-date-display" class="text-xs text-emerald-200 mt-1">جاري تحميل تاريخ اليوم...</p>
       
-      <!-- اختيار المدينة المغربية -->
+      <!-- اختيار المدينة (أزرو هي الأولى ومختارة تلقائياً) -->
       <div class="mt-4 flex items-center justify-center gap-2">
         <label class="text-xs text-emerald-100">المدينة:</label>
         <select id="prayer-city-select" onchange="fetchPrayerTimes()" class="bg-emerald-950 text-amber-300 text-xs font-bold rounded-xl px-3 py-1.5 border border-emerald-700 focus:outline-none">
+          <option value="Azrou" selected>أزرو (Azrou) 🌲</option>
+          <option value="Ifrane">إفران (Ifrane)</option>
+          <option value="Fes">فاس (Fès)</option>
+          <option value="Meknes">مكناس (Meknès)</option>
+          <option value="Sefrou">صفرو (Sefrou)</option>
+          <option value="Khenifra">خنيفرة (Khénifra)</option>
           <option value="Casablanca">الدار البيضاء (Casablanca)</option>
           <option value="Rabat">الرباط (Rabat)</option>
-          <option value="Fes">فاس (Fès)</option>
           <option value="Marrakech">مراكش (Marrakech)</option>
           <option value="Agadir">أكادير (Agadir)</option>
           <option value="Tangier">طنجة (Tanger)</option>
-          <option value="Tan-Tan" selected>طانطان (Tan-Tan)</option>
+          <option value="Tetouan">تطوان (Tétouan)</option>
+          <option value="Oujda">وجدة (Oujda)</option>
+          <option value="Tan-Tan">طانطان (Tan-Tan)</option>
           <option value="Guelmim">كلميم (Guelmim)</option>
           <option value="Laayoune">العيون (Laâyoune)</option>
-          <option value="Oujda">وجدة (Oujda)</option>
-          <option value="Meknes">مكناس (Meknès)</option>
-          <option value="Tetouan">تطوان (Tétouan)</option>
         </select>
       </div>
 
@@ -413,44 +417,38 @@
       </div>
     </div>
 
-    <!-- شبكة أوقات الصلوات الخمس مع الشروق -->
+    <!-- شبكة أوقات الصلوات -->
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-      <!-- الفجر -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
         <span class="text-2xl mb-1">🌌</span>
         <span class="text-xs font-bold text-slate-700">صلاة الفجر</span>
         <span id="prayer-fajr" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
       </div>
 
-      <!-- الشروق -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
         <span class="text-2xl mb-1">🌅</span>
         <span class="text-xs font-bold text-slate-700">الشروق</span>
         <span id="prayer-sunrise" class="text-lg font-bold text-amber-600 font-mono mt-1">--:--</span>
       </div>
 
-      <!-- الظهر -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
         <span class="text-2xl mb-1">☀️</span>
         <span class="text-xs font-bold text-slate-700">صلاة الظهر</span>
         <span id="prayer-dhuhr" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
       </div>
 
-      <!-- العصر -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
         <span class="text-2xl mb-1">🌤️</span>
         <span class="text-xs font-bold text-slate-700">صلاة العصر</span>
         <span id="prayer-asr" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
       </div>
 
-      <!-- المغرب -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
         <span class="text-2xl mb-1">🌇</span>
         <span class="text-xs font-bold text-slate-700">صلاة المغرب</span>
         <span id="prayer-maghrib" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
       </div>
 
-      <!-- العشاء -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
         <span class="text-2xl mb-1">🌙</span>
         <span class="text-xs font-bold text-slate-700">صلاة العشاء</span>
@@ -533,7 +531,7 @@
     </div>
   </div>
 
-  <!-- Barre Navigation Tehtania (4 Boutonat: Ahzab, Chat, Salat, Imam) -->
+  <!-- Barre Navigation Tehtania -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex justify-around items-center py-2 shadow-lg">
     <button onclick="switchTab('khatma')" id="tab-khatma-btn" class="flex flex-col items-center gap-1 text-emerald-800 font-bold transition">
       <span class="text-xl">📖</span>
@@ -546,7 +544,6 @@
       <span id="unread-dot" class="w-2.5 h-2.5 rounded-full bg-rose-600 absolute top-0.5 right-4 ring-2 ring-white hidden animate-pulse"></span>
     </button>
 
-    <!-- Ayqona dial Salawat -->
     <button onclick="switchTab('prayer')" id="tab-prayer-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition">
       <span class="text-xl">🕌</span>
       <span class="text-[10px] sm:text-[11px]">أوقات الصلاة</span>
@@ -679,11 +676,11 @@
     }
 
     // ==========================================
-    // محرك أوقات الصلاة (Prayer Times Engine)
+    // Aw9at Salat (Default: Azrou)
     // ==========================================
     async function fetchPrayerTimes() {
       const citySelect = document.getElementById('prayer-city-select');
-      const city = citySelect ? citySelect.value : 'Tan-Tan';
+      const city = citySelect ? citySelect.value : 'Azrou';
       
       const cached = localStorage.getItem(`prayer_times_${city}`);
       const todayDateStr = new Date().toISOString().slice(0, 10);
@@ -697,7 +694,6 @@
       }
 
       try {
-        // Aladhan API الرسمي مع حساب توقيت وزارة الأوقاف المغربية (Method 3)
         const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Morocco&method=3`);
         const json = await res.json();
         if (json && json.data && json.data.timings) {
@@ -764,7 +760,6 @@
       });
 
       if (!nextPrayer) {
-        // إذا فات العشاء، الصلاة القادمة هي فجر الغد
         const [h, m] = prayers[0].time.split(':').map(Number);
         const tomorrowFajr = new Date();
         tomorrowFajr.setDate(tomorrowFajr.getDate() + 1);
@@ -782,7 +777,6 @@
       }
     }
 
-    // تتبع الرسائل غير المقروءة
     function initUnreadMessagesTracker() {
       if (!myUsername) return;
 
@@ -860,7 +854,6 @@
       renderVerticalUsersList();
     }
 
-    // محرك قراءة القرآن
     async function openQuranReader(hizbId) {
       closeModal();
       selectedHizbId = hizbId;
@@ -1566,7 +1559,6 @@
       }
     }
 
-    // Gestion dyal Tabat
     function switchTab(tab) {
       currentTab = tab;
       const khatmaView = document.getElementById('khatma-view');
