@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ختمة القرآن الكريم والتواصل المباشر</title>
+  <title>ختمة القرآن الكريم والتواصل ومواقيت الصلاة</title>
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=26">
+  <link rel="manifest" href="manifest.json?v=27">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,7 +50,7 @@
 
   <audio id="remote-audio" autoplay playsinline></audio>
 
-  <!-- شاشة التسجيل الإلزامية -->
+  <!-- Ecran d'inscription -->
   <div id="registration-overlay" class="fixed inset-0 bg-emerald-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm text-center shadow-2xl border border-emerald-100">
       <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-200">
@@ -72,7 +72,7 @@
     </div>
   </div>
 
-  <!-- شريط العنوان -->
+  <!-- Header -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-20 border-b border-emerald-800">
     <div class="max-w-4xl mx-auto px-3 py-2 flex justify-between items-center gap-2">
       <div class="flex items-center gap-2">
@@ -105,7 +105,7 @@
     </div>
   </header>
 
-  <!-- الصفحة الأولى: شبكة الأحزاب -->
+  <!-- Page 1: Khatma Ahzab -->
   <main id="khatma-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1">
     <div id="install-banner" class="hidden mb-3 bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-3 rounded-2xl shadow-lg border border-emerald-700/50 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -152,7 +152,7 @@
     <div id="ahzab-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5"></div>
   </main>
 
-  <!-- الصفحة الثانية: التواصل والشات -->
+  <!-- Page 2: Chat & Calls -->
   <main id="chat-view" class="max-w-4xl mx-auto w-full flex-1 flex flex-col hidden h-[calc(100vh-125px)]">
     <div id="chat-list-panel" class="flex-1 flex flex-col bg-white overflow-hidden">
       <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -164,7 +164,6 @@
       </div>
 
       <div class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1" id="users-list-scroll">
-        <!-- المجموعة العامة -->
         <div onclick="openChat('group', 'المجموعة العامة')" class="flex items-center justify-between p-3 rounded-2xl hover:bg-emerald-50 cursor-pointer transition border border-transparent hover:border-emerald-200 relative">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
@@ -173,7 +172,6 @@
             <div>
               <div class="flex items-center gap-2">
                 <h4 class="font-bold text-sm text-slate-800">المجموعة العامة</h4>
-                <!-- بادج الرسائل الجديدة للمجموعة العامة -->
                 <span id="unread-badge-group" class="hidden bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">جديد</span>
               </div>
               <p class="text-xs text-slate-400">محادثة جماعية مفتوحة لجميع المشاركين</p>
@@ -186,7 +184,7 @@
       </div>
     </div>
 
-    <!-- شاشة المحادثة المفتوحة -->
+    <!-- Conversation Panel -->
     <div id="chat-conversation-panel" class="flex-1 flex flex-col hidden h-full">
       <div class="bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-2">
@@ -252,7 +250,7 @@
     </div>
   </main>
 
-  <!-- الصفحة الثالثة: الإمام ياسين -->
+  <!-- Page 3: Imam Abdessalam Yassine -->
   <main id="imam-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1 hidden pb-10">
     <div class="bg-gradient-to-br from-emerald-900 to-teal-950 text-white rounded-3xl p-6 shadow-md border border-emerald-800 mb-5 relative overflow-hidden">
       <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-right">
@@ -278,7 +276,7 @@
       </div>
     </div>
 
-    <!-- روابط سراج المباشرة -->
+    <!-- Rwabit Siraj -->
     <div class="mb-5 bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
       <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
         <h3 class="font-bold text-sm text-emerald-950 flex items-center gap-2">
@@ -325,7 +323,7 @@
       </div>
     </div>
 
-    <!-- السيرة الداخلية المكتوبة -->
+    <!-- Biographie interne -->
     <div class="space-y-4 text-right">
       <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
         <h3 class="font-bold text-sm text-emerald-900 mb-2 flex items-center gap-2">
@@ -379,7 +377,89 @@
     </div>
   </main>
 
-  <!-- الصفحة الرابعة: قارئ القرآن الكريم المباشر -->
+  <!-- Page 4: Mawakit Salat (جديدة) -->
+  <main id="prayer-view" class="max-w-4xl mx-auto px-4 mt-3 w-full flex-1 hidden pb-10">
+    <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white rounded-3xl p-6 shadow-md border border-emerald-800 mb-5 text-center relative overflow-hidden">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-950/80 border border-amber-400/40 flex items-center justify-center text-3xl mx-auto mb-3">
+        🕌
+      </div>
+      <h2 class="text-lg font-bold text-amber-300">مواقيت الصلاة الرسمية بالمغرب</h2>
+      <p id="prayer-date-display" class="text-xs text-emerald-200 mt-1">جاري تحميل تاريخ اليوم...</p>
+      
+      <!-- اختيار المدينة المغربية -->
+      <div class="mt-4 flex items-center justify-center gap-2">
+        <label class="text-xs text-emerald-100">المدينة:</label>
+        <select id="prayer-city-select" onchange="fetchPrayerTimes()" class="bg-emerald-950 text-amber-300 text-xs font-bold rounded-xl px-3 py-1.5 border border-emerald-700 focus:outline-none">
+          <option value="Casablanca">الدار البيضاء (Casablanca)</option>
+          <option value="Rabat">الرباط (Rabat)</option>
+          <option value="Fes">فاس (Fès)</option>
+          <option value="Marrakech">مراكش (Marrakech)</option>
+          <option value="Agadir">أكادير (Agadir)</option>
+          <option value="Tangier">طنجة (Tanger)</option>
+          <option value="Tan-Tan" selected>طانطان (Tan-Tan)</option>
+          <option value="Guelmim">كلميم (Guelmim)</option>
+          <option value="Laayoune">العيون (Laâyoune)</option>
+          <option value="Oujda">وجدة (Oujda)</option>
+          <option value="Meknes">مكناس (Meknès)</option>
+          <option value="Tetouan">تطوان (Tétouan)</option>
+        </select>
+      </div>
+
+      <!-- العد التنازلي للصلاة القادمة -->
+      <div class="mt-5 bg-emerald-950/60 rounded-2xl p-3 border border-emerald-800 inline-block px-6">
+        <span class="text-[11px] text-emerald-300 block mb-0.5">الصلاة القادمة:</span>
+        <span id="next-prayer-name" class="font-bold text-amber-300 text-sm">--</span>
+        <span id="next-prayer-countdown" class="text-xs text-white font-mono block mt-0.5">--:--:--</span>
+      </div>
+    </div>
+
+    <!-- شبكة أوقات الصلوات الخمس مع الشروق -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
+      <!-- الفجر -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
+        <span class="text-2xl mb-1">🌌</span>
+        <span class="text-xs font-bold text-slate-700">صلاة الفجر</span>
+        <span id="prayer-fajr" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
+      </div>
+
+      <!-- الشروق -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
+        <span class="text-2xl mb-1">🌅</span>
+        <span class="text-xs font-bold text-slate-700">الشروق</span>
+        <span id="prayer-sunrise" class="text-lg font-bold text-amber-600 font-mono mt-1">--:--</span>
+      </div>
+
+      <!-- الظهر -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
+        <span class="text-2xl mb-1">☀️</span>
+        <span class="text-xs font-bold text-slate-700">صلاة الظهر</span>
+        <span id="prayer-dhuhr" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
+      </div>
+
+      <!-- العصر -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
+        <span class="text-2xl mb-1">🌤️</span>
+        <span class="text-xs font-bold text-slate-700">صلاة العصر</span>
+        <span id="prayer-asr" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
+      </div>
+
+      <!-- المغرب -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
+        <span class="text-2xl mb-1">🌇</span>
+        <span class="text-xs font-bold text-slate-700">صلاة المغرب</span>
+        <span id="prayer-maghrib" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
+      </div>
+
+      <!-- العشاء -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between items-center">
+        <span class="text-2xl mb-1">🌙</span>
+        <span class="text-xs font-bold text-slate-700">صلاة العشاء</span>
+        <span id="prayer-isha" class="text-lg font-bold text-emerald-800 font-mono mt-1">--:--</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Page 5: Lecteur Coran -->
   <div id="quran-reader-modal" class="fixed inset-0 bg-amber-50/95 z-50 flex flex-col hidden">
     <div class="bg-emerald-950 text-white px-4 py-3 flex justify-between items-center shadow-md border-b border-emerald-800">
       <div class="flex items-center gap-2">
@@ -407,7 +487,7 @@
     </div>
   </div>
 
-  <!-- شاشة الرنين عند استقبال مكالمة صوتية -->
+  <!-- Ecran Appel entrant -->
   <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-24 h-24 rounded-full bg-emerald-600/30 border-4 border-emerald-500 flex items-center justify-center animate-pulse mb-6">
       <span class="text-4xl animate-bounce">📞</span>
@@ -432,7 +512,7 @@
     </div>
   </div>
 
-  <!-- شاشة المكالمة الصوتية الجارية -->
+  <!-- Ecran Appel en cours -->
   <div id="active-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-28 h-28 rounded-full bg-emerald-900/60 border-4 border-emerald-400 flex items-center justify-center mb-5 relative">
       <span class="text-5xl">🎙️</span>
@@ -453,23 +533,28 @@
     </div>
   </div>
 
-  <!-- شريط التنقل السفلي مع شارة الإشعارات الحمراء -->
+  <!-- Barre Navigation Tehtania (4 Boutonat: Ahzab, Chat, Salat, Imam) -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex justify-around items-center py-2 shadow-lg">
     <button onclick="switchTab('khatma')" id="tab-khatma-btn" class="flex flex-col items-center gap-1 text-emerald-800 font-bold transition">
       <span class="text-xl">📖</span>
-      <span class="text-[11px]">أحزاب الختمة</span>
+      <span class="text-[10px] sm:text-[11px]">الأحزاب</span>
     </button>
 
     <button onclick="switchTab('chat')" id="tab-chat-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition relative">
       <span class="text-xl">💬</span>
-      <span class="text-[11px]">المحادثات والأعضاء</span>
-      <!-- شارة الإشعار الحمراء للرسائل غير المقروءة -->
-      <span id="unread-dot" class="w-2.5 h-2.5 rounded-full bg-rose-600 absolute top-0.5 right-6 ring-2 ring-white hidden animate-pulse"></span>
+      <span class="text-[10px] sm:text-[11px]">المحادثات</span>
+      <span id="unread-dot" class="w-2.5 h-2.5 rounded-full bg-rose-600 absolute top-0.5 right-4 ring-2 ring-white hidden animate-pulse"></span>
+    </button>
+
+    <!-- Ayqona dial Salawat -->
+    <button onclick="switchTab('prayer')" id="tab-prayer-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition">
+      <span class="text-xl">🕌</span>
+      <span class="text-[10px] sm:text-[11px]">أوقات الصلاة</span>
     </button>
 
     <button onclick="switchTab('imam')" id="tab-imam-btn" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition">
       <span class="text-xl">📚</span>
-      <span class="text-[11px]">الإمام المجدد</span>
+      <span class="text-[10px] sm:text-[11px]">الإمام المجدد</span>
     </button>
   </nav>
 
@@ -537,8 +622,9 @@
     let ringtoneInterval = null;
     let currentCallData = null;
 
-    // تتبع الرسائل غير المقروءة لكل محادثة
     let unreadCounts = {};
+    let prayerInterval = null;
+    let currentPrayerTimes = null;
 
     const rtcConfig = {
       iceServers: [
@@ -593,12 +679,113 @@
     }
 
     // ==========================================
-    // محرك رصد الرسائل الجديدة غير المقروءة (Unread Tracker)
+    // محرك أوقات الصلاة (Prayer Times Engine)
     // ==========================================
+    async function fetchPrayerTimes() {
+      const citySelect = document.getElementById('prayer-city-select');
+      const city = citySelect ? citySelect.value : 'Tan-Tan';
+      
+      const cached = localStorage.getItem(`prayer_times_${city}`);
+      const todayDateStr = new Date().toISOString().slice(0, 10);
+
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.date === todayDateStr) {
+          renderPrayerTimes(parsed.data);
+          return;
+        }
+      }
+
+      try {
+        // Aladhan API الرسمي مع حساب توقيت وزارة الأوقاف المغربية (Method 3)
+        const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Morocco&method=3`);
+        const json = await res.json();
+        if (json && json.data && json.data.timings) {
+          localStorage.setItem(`prayer_times_${city}`, JSON.stringify({
+            date: todayDateStr,
+            data: json.data
+          }));
+          renderPrayerTimes(json.data);
+        }
+      } catch (e) {
+        if (cached) {
+          renderPrayerTimes(JSON.parse(cached).data);
+        }
+      }
+    }
+
+    function renderPrayerTimes(data) {
+      currentPrayerTimes = data.timings;
+      document.getElementById('prayer-fajr').innerText = data.timings.Fajr;
+      document.getElementById('prayer-sunrise').innerText = data.timings.Sunrise;
+      document.getElementById('prayer-dhuhr').innerText = data.timings.Dhuhr;
+      document.getElementById('prayer-asr').innerText = data.timings.Asr;
+      document.getElementById('prayer-maghrib').innerText = data.timings.Maghrib;
+      document.getElementById('prayer-isha').innerText = data.timings.Isha;
+
+      if (data.date && data.date.hijri) {
+        document.getElementById('prayer-date-display').innerText = `${data.date.hijri.day} ${data.date.hijri.month.ar} ${data.date.hijri.year} هـ • ${data.date.readable}`;
+      }
+
+      startPrayerCountdown();
+    }
+
+    function startPrayerCountdown() {
+      if (prayerInterval) clearInterval(prayerInterval);
+      updateCountdown();
+      prayerInterval = setInterval(updateCountdown, 1000);
+    }
+
+    function updateCountdown() {
+      if (!currentPrayerTimes) return;
+      const now = new Date();
+      const prayers = [
+        { name: 'الفجر', time: currentPrayerTimes.Fajr },
+        { name: 'الشروق', time: currentPrayerTimes.Sunrise },
+        { name: 'الظهر', time: currentPrayerTimes.Dhuhr },
+        { name: 'العصر', time: currentPrayerTimes.Asr },
+        { name: 'المغرب', time: currentPrayerTimes.Maghrib },
+        { name: 'العشاء', time: currentPrayerTimes.Isha }
+      ];
+
+      let nextPrayer = null;
+      let minDiff = Infinity;
+
+      prayers.forEach(p => {
+        const [h, m] = p.time.split(':').map(Number);
+        const pDate = new Date();
+        pDate.setHours(h, m, 0, 0);
+
+        let diff = pDate - now;
+        if (diff > 0 && diff < minDiff) {
+          minDiff = diff;
+          nextPrayer = p;
+        }
+      });
+
+      if (!nextPrayer) {
+        // إذا فات العشاء، الصلاة القادمة هي فجر الغد
+        const [h, m] = prayers[0].time.split(':').map(Number);
+        const tomorrowFajr = new Date();
+        tomorrowFajr.setDate(tomorrowFajr.getDate() + 1);
+        tomorrowFajr.setHours(h, m, 0, 0);
+        minDiff = tomorrowFajr - now;
+        nextPrayer = prayers[0];
+      }
+
+      if (nextPrayer) {
+        document.getElementById('next-prayer-name').innerText = `صلاة ${nextPrayer.name} (${nextPrayer.time})`;
+        const hours = Math.floor(minDiff / (1000 * 60 * 60));
+        const mins = Math.floor((minDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((minDiff % (1000 * 60)) / 1000);
+        document.getElementById('next-prayer-countdown').innerText = `متبقي: ${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      }
+    }
+
+    // تتبع الرسائل غير المقروءة
     function initUnreadMessagesTracker() {
       if (!myUsername) return;
 
-      // 1. مراقبة المجموعة العامة
       const groupLastSeen = parseInt(localStorage.getItem(`last_seen_group_${myUsername}`) || '0', 10);
       db.ref('khatma_messages/group').limitToLast(20).on('value', (snapshot) => {
         const msgs = snapshot.val();
@@ -614,7 +801,6 @@
         updateUnreadBadgesUI();
       });
 
-      // 2. مراقبة الرسائل الخاصة مع كل عضو
       Object.values(allUsers).forEach(u => {
         if (!u.name || u.name === myUsername) return;
         trackPrivateUnreadForUser(u.name);
@@ -653,7 +839,6 @@
     }
 
     function updateUnreadBadgesUI() {
-      // إشعار الشريط السفلي
       const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
       const dot = document.getElementById('unread-dot');
       if (dot) {
@@ -661,7 +846,6 @@
         else dot.classList.add('hidden');
       }
 
-      // إشعار المجموعة العامة
       const groupBadge = document.getElementById('unread-badge-group');
       if (groupBadge) {
         const count = unreadCounts['group'] || 0;
@@ -673,7 +857,6 @@
         }
       }
 
-      // تحديث قائمة الأعضاء
       renderVerticalUsersList();
     }
 
@@ -799,7 +982,6 @@
       currentChatTarget = target;
       currentChatTargetName = displayName;
 
-      // وضع علامة مقروء فور فتح المحادثة
       markChatAsSeen(target);
 
       document.getElementById('chat-list-panel').classList.add('hidden');
@@ -1167,7 +1349,6 @@
         container.innerHTML = '';
         const data = snapshot.val();
 
-        // تجديد وقت القراءة أثناء فتح المحادثة
         markChatAsSeen(currentChatTarget);
 
         if (data) {
@@ -1385,25 +1566,31 @@
       }
     }
 
+    // Gestion dyal Tabat
     function switchTab(tab) {
       currentTab = tab;
       const khatmaView = document.getElementById('khatma-view');
       const chatView = document.getElementById('chat-view');
       const imamView = document.getElementById('imam-view');
+      const prayerView = document.getElementById('prayer-view');
 
       const tabKhatmaBtn = document.getElementById('tab-khatma-btn');
       const tabChatBtn = document.getElementById('tab-chat-btn');
       const tabImamBtn = document.getElementById('tab-imam-btn');
+      const tabPrayerBtn = document.getElementById('tab-prayer-btn');
+
       const resetBtn = document.getElementById('reset-btn');
       const subTitle = document.getElementById('sub-header-title');
 
       khatmaView.classList.add('hidden');
       chatView.classList.add('hidden');
       imamView.classList.add('hidden');
+      prayerView.classList.add('hidden');
 
       tabKhatmaBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition';
       tabChatBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition relative';
       tabImamBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition';
+      tabPrayerBtn.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-700 font-medium transition';
 
       if (tab === 'khatma') {
         khatmaView.classList.remove('hidden');
@@ -1421,6 +1608,12 @@
         tabImamBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition';
         resetBtn.classList.add('hidden');
         subTitle.innerText = 'سيرة ونبذة الإمام المجدد عبد السلام ياسين رحمه الله وموقعه الرسمي';
+      } else if (tab === 'prayer') {
+        prayerView.classList.remove('hidden');
+        tabPrayerBtn.className = 'flex flex-col items-center gap-1 text-emerald-800 font-bold transition';
+        resetBtn.classList.add('hidden');
+        subTitle.innerText = 'مواقيت الصلاة الرسمية والعد التنازلي';
+        fetchPrayerTimes();
       }
     }
 
