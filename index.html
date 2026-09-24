@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="manifest" href="manifest.json?v=32">
+  <link rel="manifest" href="manifest.json?v=33">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -48,6 +48,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 flex flex-col">
 
+  <!-- Audio élément pour WebRTC distant -->
   <audio id="remote-audio" autoplay playsinline></audio>
 
   <!-- Ecran d'inscription -->
@@ -89,7 +90,6 @@
       </div>
 
       <div class="flex items-center gap-1.5 shrink-0">
-        <!-- زر بدء ختمة جديدة في الأعلى -->
         <button onclick="startNewKhatmaModal()" id="new-khatma-header-btn" class="text-[11px] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2.5 py-1.5 rounded-xl transition shadow flex items-center gap-1">
           <span>🔄</span> <span>ختمة جديدة</span>
         </button>
@@ -126,7 +126,7 @@
       </button>
     </div>
 
-    <!-- كارت إنجاز الختمة مع زر البدء المباشر -->
+    <!-- كارت إنجاز الختمة -->
     <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 mb-5">
       <div class="flex justify-between items-center mb-2">
         <div class="flex items-center gap-2">
@@ -158,7 +158,6 @@
           </div>
         </div>
 
-        <!-- زر تصفير وبدء ختمة جديدة في الكارت -->
         <button onclick="startNewKhatmaModal()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-xl border border-emerald-200 transition flex items-center gap-1 shadow-sm">
           <span>🔄</span> <span>بدء ختمة جديدة</span>
         </button>
@@ -220,8 +219,9 @@
         </div>
 
         <div class="flex items-center gap-1.5">
-          <button id="call-start-btn" onclick="initiateVoiceCall()" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="مكالمة صوتية">
-            <span>📞</span> <span class="hidden sm:inline">اتصال</span>
+          <!-- زر بدء الاتصال الصوتي المباشر -->
+          <button id="call-start-btn" onclick="initiateVoiceCall()" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95" title="مكالمة صوتية">
+            <span class="text-sm">📞</span> <span>اتصال</span>
           </button>
 
           <button onclick="clearChatForMeOnly()" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-2 py-1.5 rounded-xl text-xs font-medium transition shadow-sm" title="مسح من هاتفي فقط">
@@ -402,7 +402,6 @@
       <h2 class="text-lg font-bold text-amber-300">مواقيت الصلاة الرسمية بالمغرب</h2>
       <p id="prayer-date-display" class="text-xs text-emerald-200 mt-1">جاري تحميل تاريخ اليوم...</p>
       
-      <!-- اختيار المدينة (أزرو الافتراضية) -->
       <div class="mt-4 flex items-center justify-center gap-2">
         <label class="text-xs text-emerald-100">المدينة:</label>
         <select id="prayer-city-select" onchange="fetchPrayerTimes()" class="bg-emerald-950 text-amber-300 text-xs font-bold rounded-xl px-3 py-1.5 border border-emerald-700 focus:outline-none">
@@ -425,7 +424,6 @@
         </select>
       </div>
 
-      <!-- العد التنازلي للصلاة القادمة -->
       <div class="mt-5 bg-emerald-950/60 rounded-2xl p-3 border border-emerald-800 inline-block px-6">
         <span class="text-[11px] text-emerald-300 block mb-0.5">الصلاة القادمة:</span>
         <span id="next-prayer-name" class="font-bold text-amber-300 text-sm">جاري الحساب...</span>
@@ -501,7 +499,7 @@
     </div>
   </div>
 
-  <!-- Ecran Appel entrant -->
+  <!-- Ecran Appel entrant (رنين المكالمة الواردة) -->
   <div id="incoming-call-screen" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-24 h-24 rounded-full bg-emerald-600/30 border-4 border-emerald-500 flex items-center justify-center animate-pulse mb-6">
       <span class="text-4xl animate-bounce">📞</span>
@@ -526,7 +524,7 @@
     </div>
   </div>
 
-  <!-- Ecran Appel en cours -->
+  <!-- Ecran Appel en cours (المكالمة الجارية) -->
   <div id="active-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 hidden">
     <div class="w-28 h-28 rounded-full bg-emerald-900/60 border-4 border-emerald-400 flex items-center justify-center mb-5 relative">
       <span class="text-5xl">🎙️</span>
@@ -616,7 +614,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const khatmaRef = db.ref('khatma_ahzab');
-    const khatmaMetaRef = db.ref('khatma_metadata'); // لحفظ رقم الختمة وتاريخ بدايتها
+    const khatmaMetaRef = db.ref('khatma_metadata');
     const usersRef = db.ref('khatma_users');
     const callsRef = db.ref('khatma_voice_calls');
 
@@ -631,6 +629,7 @@
     let currentReaderFontSize = 22;
     let currentKhatmaRound = 1;
 
+    // WebRTC
     let localStream = null;
     let peerConnection = null;
     let callTimerInterval = null;
@@ -642,12 +641,109 @@
     let prayerInterval = null;
     let currentPrayerTimes = null;
 
+    // Serveurs STUN fiables
     const rtcConfig = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' }
       ]
     };
+
+    // ==========================================
+    // محرك الأصوات (Web Audio API للرسائل والمكالمات)
+    // ==========================================
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // صوت إشعار رسالة جديدة (Notification Tone)
+    function playMessageNotificationSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.12);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.25);
+
+        if ('vibrate' in navigator) {
+          navigator.vibrate(200);
+        }
+      } catch (e) {
+        console.log('Audio error:', e);
+      }
+    }
+
+    // رنين المكالمة الصوتية
+    function playRingtoneSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.setValueAtTime(650, now + 0.2);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.6);
+      } catch (e) {}
+    }
+
+    function startRinging() {
+      stopRinging();
+      playRingtoneSound();
+      ringtoneInterval = setInterval(() => {
+        playRingtoneSound();
+      }, 2000);
+
+      if ('vibrate' in navigator) {
+        navigator.vibrate([800, 400, 800, 400, 800]);
+      }
+    }
+
+    function stopRinging() {
+      if (ringtoneInterval) {
+        clearInterval(ringtoneInterval);
+        ringtoneInterval = null;
+      }
+      if ('vibrate' in navigator) {
+        navigator.vibrate(0);
+      }
+    }
+
+    // تفعيل الصوت بعد أول لمسة على الشاشة لتجاوز حظر المتصفح
+    window.addEventListener('click', () => {
+      getAudioContext();
+    }, { once: true });
 
     let myUsername = localStorage.getItem('chat_username') || '';
 
@@ -694,9 +790,7 @@
       });
     }
 
-    // ==========================================
-    // إدارة رقم الختمة وبدء ختمة جديدة
-    // ==========================================
+    // إدارة رقم الختمة
     khatmaMetaRef.on('value', (snapshot) => {
       const meta = snapshot.val();
       if (meta && meta.round) {
@@ -729,14 +823,12 @@
       }
 
       if (confirm(confirmMsg)) {
-        // 1. تصفير الأحزاب الـ 60
         const resetData = [];
         for (let i = 1; i <= 60; i++) {
           resetData.push({ id: i, status: 'available', reader: '' });
         }
         khatmaRef.set(resetData);
 
-        // 2. ترقية رقم الختمة
         const nextRound = currentKhatmaRound + 1;
         khatmaMetaRef.update({
           round: nextRound,
@@ -744,7 +836,6 @@
           lastResetAt: Date.now()
         });
 
-        // 3. إرسال رسالة آلية في المجموعة العامة لتهنئة الإخوة وإشعارهم بالختمة الجديدة
         const now = new Date();
         const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
         db.ref('khatma_messages/group').push({
@@ -759,9 +850,7 @@
       }
     }
 
-    // ==========================================
-    // محرك أوقات الصلاة الدقيق
-    // ==========================================
+    // محرك أوقات الصلاة
     function parseToMinutes(tStr) {
       if (!tStr) return 0;
       const clean = tStr.split(' ')[0].trim();
@@ -889,6 +978,7 @@
       }
     }
 
+    // Tracker messages non lus
     function initUnreadMessagesTracker() {
       if (!myUsername) return;
 
@@ -1171,49 +1261,9 @@
       });
     }
 
-    let audioCtx = null;
-    function playRingtoneSound() {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 1.2);
-      } catch (e) {}
-    }
-
-    function startRinging() {
-      stopRinging();
-      playRingtoneSound();
-      ringtoneInterval = setInterval(() => {
-        playRingtoneSound();
-      }, 2500);
-
-      if ('vibrate' in navigator) {
-        navigator.vibrate([1000, 500, 1000, 500, 1000]);
-      }
-    }
-
-    function stopRinging() {
-      if (ringtoneInterval) {
-        clearInterval(ringtoneInterval);
-        ringtoneInterval = null;
-      }
-      if ('vibrate' in navigator) {
-        navigator.vibrate(0);
-      }
-    }
-
+    // ==========================================
+    // محرك الاتصال الصوتي المباشر الكامل (WebRTC P2P)
+    // ==========================================
     function listenForIncomingVoiceCalls(username) {
       if (!username) return;
       const myCleanKey = username.replace(/[.#$\[\]]/g, '_');
@@ -1241,11 +1291,15 @@
         return;
       }
 
+      getAudioContext();
+
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         setupPeerConnection();
 
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
 
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
@@ -1261,8 +1315,13 @@
           timestamp: Date.now()
         };
 
+        // مسح بيانات الاتصال القديمة أولاً
+        await callsRef.child(targetCleanKey).remove();
+        await callsRef.child(myCleanKey).remove();
+
         await callsRef.child(targetCleanKey).set(currentCallData);
 
+        // مراقبة قبول المكالمة
         callsRef.child(myCleanKey).child('answer').on('value', async (snapshot) => {
           const answerData = snapshot.val();
           if (answerData && peerConnection && !peerConnection.currentRemoteDescription) {
@@ -1272,6 +1331,7 @@
           }
         });
 
+        // تبادل ICE Candidates
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
             callsRef.child(targetCleanKey).child('candidates').push(JSON.stringify(event.candidate));
@@ -1287,17 +1347,18 @@
           }
         });
 
-        document.getElementById('active-call-with').innerText = `جاري الاتصال بـ ${currentChatTarget}...`;
+        document.getElementById('active-call-with').innerText = `جاري الاتصال بـ ${currentChatTarget}... 📞`;
         document.getElementById('active-call-modal').classList.remove('hidden');
 
       } catch (err) {
-        alert('تعذر فتح الميكروفون للاتصال. يرجى إعطاء الصلاحية.');
+        alert('يرجى السماح بالوصول إلى الميكروفون في هاتفك لإجراء المكالمة.');
       }
     }
 
     async function acceptIncomingCall() {
       stopRinging();
       document.getElementById('incoming-call-screen').classList.add('hidden');
+      getAudioContext();
 
       if (!currentCallData) return;
 
@@ -1305,7 +1366,9 @@
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         setupPeerConnection();
 
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
 
         const offer = JSON.parse(currentCallData.sdp);
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
@@ -1338,7 +1401,7 @@
         startCallTimer();
 
       } catch (err) {
-        alert('تعذر استقبال المكالمة.');
+        alert('تعذر استقبال المكالمة. يرجى إعطاء صلاحية الميكروفون.');
         hangupVoiceCall();
       }
     }
@@ -1360,7 +1423,7 @@
         const remoteAudio = document.getElementById('remote-audio');
         if (remoteAudio && event.streams[0]) {
           remoteAudio.srcObject = event.streams[0];
-          remoteAudio.play().catch(e => console.log('Audio error:', e));
+          remoteAudio.play().catch(e => console.log('Audio autoplay:', e));
         }
       };
 
@@ -1368,7 +1431,7 @@
         if (peerConnection.connectionState === 'connected') {
           if (currentCallData) {
             const partner = currentCallData.caller === myUsername ? currentCallData.target : currentCallData.caller;
-            document.getElementById('active-call-with').innerText = `متصل مع: ${partner}`;
+            document.getElementById('active-call-with').innerText = `متصل مع: ${partner} 🎙️`;
           }
         } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
           hangupVoiceCall();
@@ -1428,6 +1491,9 @@
       currentCallData = null;
     }
 
+    // ==========================================
+    // رسائل الشات مع الصوت المباشر
+    // ==========================================
     function getChatRoomPath() {
       if (currentChatTarget === 'group') {
         return 'khatma_messages/group';
@@ -1495,9 +1561,11 @@
             container.appendChild(bubble);
           });
 
+          // تشغيل صوت الإشعار التلقائي عند وصول رسالة جديدة من شخص آخر
           if (!isInitialLoad && visibleMsgs.length > 0) {
             const lastMsg = visibleMsgs[visibleMsgs.length - 1];
             if (lastMsg.sender !== myUsername) {
+              playMessageNotificationSound();
               let bodyText = lastMsg.text || (lastMsg.type === 'audio' ? '🎙️ رسالة صوتية جديدة' : '📷 صورة جديدة');
               showSystemNotification(`رسالة من ${lastMsg.sender}`, bodyText);
             }
@@ -1540,6 +1608,8 @@
       }
       if (!text) return;
 
+      getAudioContext();
+
       const now = new Date();
       const timeStr = now.toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
 
@@ -1563,6 +1633,8 @@
         event.target.value = '';
         return;
       }
+
+      getAudioContext();
 
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1614,6 +1686,8 @@
         checkUserRegistration();
         return;
       }
+
+      getAudioContext();
 
       if (!isRecording) {
         try {
